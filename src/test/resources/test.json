@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "peek": [1,2,3],
+    "poke": 2,
+    "puff": "puff0"
+  },
+  "anObject1": {
+    "someAttr": {
+      "value1": "yey",
+      "value2": 27
+    },
+    "someOther": {
+      "value1": "yoy",
+      "value2": 239,
+      "puff": "puff1"
+    }
+  },
+  "anArray": [
+    {
+      "someAttr": {
+        "value1": "blue",
+        "value2": 0
+      }
+    },
+    {
+      "someAttr": {
+        "value1": "blue",
+        "value2": 1
+      }
+    },
+    {
+      "someAttr": {
+        "value1": "blue",
+        "value2": 2
+      }
+    },
+    {
+      "someAttr": {
+        "value1": "blue",
+        "value2": 3
+      }
+    },
+    {
+      "someAttr": {
+        "value1": "blue",
+        "value2": 4
+      }
+    }
+  ]
+}
