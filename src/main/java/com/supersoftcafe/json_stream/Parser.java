@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import java.io.*;
 import java.lang.reflect.ParameterizedType;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -19,9 +20,11 @@ import java.util.stream.StreamSupport;
 public final class Parser {
     private final static Logger logger = Logger.getLogger(Parser.class.getName());
 
-    private final static TypeFactory TYPE_FACTORY = TypeFactory.defaultInstance();
-    private final static JsonFactory JSON_FACTORY = new JsonFactory();
-    private final static ObjectReader OBJECT_READER = new ObjectMapper().reader();
+    private final static TypeFactory           TYPE_FACTORY  = TypeFactory.defaultInstance();
+    private final static JsonFactory           JSON_FACTORY  = new JsonFactory();
+    private final static ObjectReader          OBJECT_READER = new ObjectMapper().reader();
+    private final static Map<Object, JavaType> TYPE_CACHE    = new ConcurrentHashMap<>();
+
     private final List<ElementMatcher<?>> elementMatchers;
 
 
@@ -29,9 +32,6 @@ public final class Parser {
         this.elementMatchers = new ArrayList<>();
     }
 
-    public static Parser create() {
-        return new Parser();
-    }
 
 
 
@@ -72,78 +72,62 @@ public final class Parser {
 
 
     public static <T> Stream<T> stream(InputStream in, Class<T> type, String... paths) {
-        return StreamSupport.stream(iterable(() -> in, type, paths).spliterator(), false);
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(in, type, paths), 0), false);
     }
 
     public static <T> Stream<T> stream(InputStream in, TypeRef<T> type, String... paths) {
-        return StreamSupport.stream(iterable(() -> in, type, paths).spliterator(), false);
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(in, type, paths), 0), false);
     }
 
     public static <T> Stream<T> stream(Reader in, Class<T> type, String... paths) {
-        return StreamSupport.stream(iterable(() -> in, type, paths).spliterator(), false);
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(in, type, paths), 0), false);
     }
 
     public static <T> Stream<T> stream(Reader in, TypeRef<T> type, String... paths) {
-        return StreamSupport.stream(iterable(() -> in, type, paths).spliterator(), false);
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(in, type, paths), 0), false);
     }
 
 
 
     public static <T> Iterator<T> iterator(InputStream in, Class<T> type, String... paths) {
-        return iterable(() -> in, type, paths).iterator();
+        return new InternalIterator<T>(() -> new ParserPair(in), constructType(type), paths);
     }
 
     public static <T> Iterator<T> iterator(InputStream in, TypeRef<T> type, String... paths) {
-        return iterable(() -> in, type, paths).iterator();
+        return new InternalIterator<T>(() -> new ParserPair(in), constructType(type), paths);
     }
 
     public static <T> Iterator<T> iterator(Reader in, Class<T> type, String... paths) {
-        return iterable(() -> in, type, paths).iterator();
+        return new InternalIterator<T>(() -> new ParserPair(in), constructType(type), paths);
     }
 
     public static <T> Iterator<T> iterator(Reader in, TypeRef<T> type, String... paths) {
-        return iterable(() -> in, type, paths).iterator();
+        return new InternalIterator<T>(() -> new ParserPair(in), constructType(type), paths);
     }
-
-
-
-    public static <T> Iterable<T> iterable(SupplyInputStream<? extends InputStream> in, Class<T> clazz, String... paths) {
-        return iterable(() -> new ParserPair(in.get()), constructType(clazz), paths);
-    }
-
-    public static <T> Iterable<T> iterable(SupplyInputStream<? extends InputStream> in, TypeRef<T> clazz, String... paths) {
-        return iterable(() -> new ParserPair(in.get()), constructType(clazz), paths);
-    }
-
-    public static <T> Iterable<T> iterable(SupplyReader<? extends Reader> in, Class<T> clazz, String... paths) {
-        return iterable(() -> new ParserPair(in.get()), constructType(clazz), paths);
-    }
-
-    public static <T> Iterable<T> iterable(SupplyReader<? extends Reader> in, TypeRef<T> clazz, String... paths) {
-        return iterable(() -> new ParserPair(in.get()), constructType(clazz), paths);
-    }
-
 
 
 
     public <T> Parser when(String path, Class<T> clazz, BiConsumer<Path, T> handler) {
-        return when(new PathMatcher(path), constructType(clazz), handler);
+        return when(MatchRule.create(path), constructType(clazz), handler);
     }
 
     public <T> Parser when(String path, TypeRef<T> type, BiConsumer<Path, T> handler) {
-        return when(new PathMatcher(path), constructType(type), handler);
+        return when(MatchRule.create(path), constructType(type), handler);
     }
 
     public <T> Parser when(String path, Class<T> clazz, Consumer<T> handler) {
-        return when(new PathMatcher(path), constructType(clazz), (Path x, T y) -> handler.accept(y));
+        return when(MatchRule.create(path), constructType(clazz), (Path x, T y) -> handler.accept(y));
     }
 
     public <T> Parser when(String path, TypeRef<T> type, Consumer<T> handler) {
-        return when(new PathMatcher(path), constructType(type), (Path x, T y) -> handler.accept(y));
+        return when(MatchRule.create(path), constructType(type), (Path x, T y) -> handler.accept(y));
     }
 
 
 
+    public static Parser create() {
+        return new Parser();
+    }
 
     public void parse(InputStream in) throws IOException {
         parse(new ParserPair(in));
@@ -165,31 +149,17 @@ public final class Parser {
         }
     }
 
-    private static <T> Iterable<T> iterable(ParserPairSupplier in, JavaType type, String... paths) {
-        PathMatcher[] matchers = new PathMatcher[paths.length];
-        for (int index = paths.length; --index >= 0; )
-            matchers[index] = new PathMatcher(paths[index]);
-
-        return () -> {
-            try {
-                return new InternalIterator<T>(in.get(), type, matchers);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
-    }
-
-    private <T> Parser when(Predicate<Path> matcher, JavaType type, BiConsumer<Path, T> handler) {
-        elementMatchers.add(new ElementMatcher<>(matcher, (x,y) -> true, type, handler));
+    private <T> Parser when(MatchRule matcher, JavaType type, BiConsumer<Path, T> handler) {
+        elementMatchers.add(new ElementMatcher<>(matcher, type, handler));
         return this;
     }
 
     private static JavaType constructType(Class<?> type) {
-        return TYPE_FACTORY.constructSimpleType(type, type, new JavaType[0]);
+        return TYPE_CACHE.computeIfAbsent(type, x -> TYPE_FACTORY.constructSimpleType(type, type, new JavaType[0]));
     }
 
     private static JavaType constructType(TypeRef<?> type) {
-        return TYPE_FACTORY.constructType(((ParameterizedType)type.getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
+        return TYPE_CACHE.computeIfAbsent(type, x -> TYPE_FACTORY.constructType(((ParameterizedType)type.getClass().getGenericSuperclass()).getActualTypeArguments()[0]));
     }
 
 
@@ -200,10 +170,16 @@ public final class Parser {
         boolean nextFound;
         InternalParser internalParser;
 
-        InternalIterator(ParserPair parserPair, JavaType type, PathMatcher[] matchers) {
+        InternalIterator(ParserPairSupplier parserPairSupplier, JavaType type, String[] jsonPaths) {
             Parser parser = new Parser();
-            for (PathMatcher matcher : matchers) parser.when(matcher, type, this);
-            internalParser = parser.new InternalParser(parserPair);
+            for (String jsonPath : jsonPaths)
+                parser.when(MatchRule.create(jsonPath), type, this);
+
+            try {
+                internalParser = parser.new InternalParser(parserPairSupplier.get());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
 
         public @Override void accept(Path nodes, T t) {
@@ -251,24 +227,22 @@ public final class Parser {
     }
 
     private static class ElementMatcher<T> {
-        private final Predicate<Path>             pathMatcher;
-        private final BiPredicate<Path, JsonNode> treeMatcher;
-        private final JavaType                    type;
-        private final BiConsumer<Path, T>         handler;
+        private final MatchRule           matchRule;
+        private final JavaType            type;
+        private final BiConsumer<Path, T> handler;
 
-        public ElementMatcher(Predicate<Path> pathMatcher, BiPredicate<Path, JsonNode> treeMatcher, JavaType type, BiConsumer<Path, T> handler) {
-            this.pathMatcher = pathMatcher;
-            this.treeMatcher = treeMatcher;
-            this.type        = type;
-            this.handler     = handler;
+        public ElementMatcher(MatchRule matchRule, JavaType type, BiConsumer<Path, T> handler) {
+            this.matchRule = matchRule;
+            this.type      = type;
+            this.handler   = handler;
         }
 
         private boolean doesPathMatch(Path path) throws IOException {
-            return pathMatcher.test(path);
+            return matchRule.testPath(path);
         }
 
         private boolean doesTreeMatch(Path path, JsonNode jsonNode) {
-            return treeMatcher.test(path, jsonNode);
+            return matchRule.testNode(path, jsonNode);
         }
 
         private void callWithData(Path path, JsonNode jsonNode) throws IOException {
@@ -276,7 +250,6 @@ public final class Parser {
             handler.accept(path.copy(), element);
         }
     }
-
 
     private class InternalParser {
         private final Path path;
@@ -388,6 +361,8 @@ public final class Parser {
         }
 
         private boolean tryConsumeElement() throws IOException {
+            boolean consumed = false;
+
             for (ElementMatcher<?> matcher : elementMatchers) {
                 if (matcher.doesPathMatch(path)) {
                     // logger.info(() -> String.format("Realising JsonNode for path %s", path));
@@ -399,12 +374,12 @@ public final class Parser {
 
                     if (matcher.doesTreeMatch(path, jsonNode)) {
                         matcher.callWithData(path, jsonNode);
+                        consumed = true;
                     }
-
-                    return true;
                 }
             }
-            return false;
+
+            return consumed;
         }
 
         private void parseEnd() throws IOException {

@@ -1,12 +1,15 @@
 package com.supersoftcafe.json_stream;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.util.ArrayList;
-import java.util.function.Predicate;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-class PathMatcher implements Predicate<Path> {
+public final class MatchRule {
 
     private final static String RECURSIVE            = "\\.";
     private final static String ARRAY_LIST           = "\\[[0-9]+(,[0-9]+)*\\]";
@@ -15,35 +18,43 @@ class PathMatcher implements Predicate<Path> {
     private final static String ATTRIBUTE_DOT_NAME   = "\\.(([a-z_][a-z0-9_]*(\\|[a-z_][a-z0-9_]*)*))";
     private final static String ATTRIBUTE_QUOTE_NAME = "\\['[a-z_][a-z0-9_]*'(,'[a-z_][a-z0-9_]*')*\\]";
 
-
-
-
     private final static Pattern pattern = Pattern.compile(
             "(" + ARRAY_LIST + ")|(" + ARRAY_RANGE + ")|(" + ATTRIBUTE_ANY + ")|(" + ATTRIBUTE_DOT_NAME + ")|(" + ATTRIBUTE_QUOTE_NAME + ")|(" + RECURSIVE + ")"
             , Pattern.CASE_INSENSITIVE);
 
+    private static Map<String, MatchRule> MATCH_RULE_CACHE = new ConcurrentHashMap<>();
+
     private final Rule rules;
 
-    /**
-     * <pre>
-     *   "$[:]"              = Any array element directly below the root."
-     *   "*.phraseMatches[]" = Any array element that is a child of 'phraseMatches'.
-     *   "$.metadata.?.name" = Any 2nd level sub-object of metadata, when at the root, called 'name'.
-     *   "$.metadata*.name"  = Any attribute under metadata called 'name', anywhere.
-     *   "$.array[0-3].name" = Name of array elements 0,1,2,3
-     *   "[]"                = Any array element
-     *   "[][3]"             = 3rd element of an array that is a direct descendent of an array
-     *   ".fred|bill[]"      = Array element that is under attribute fred or bill
-     * </pre>
-     *
-     * @param path
-     */
-    PathMatcher(String path) {
-        if (path.length() <= 1 || path.charAt(0) != '$')
+
+
+    private MatchRule(Rule rules) {
+        this.rules = new RuleStart(rules);
+    }
+
+
+    public static MatchRule create(String jsonPath) {
+        return MATCH_RULE_CACHE.computeIfAbsent(jsonPath, jp -> new MatchRule(makeRuleFromPath(jp)));
+    }
+
+
+
+
+    boolean testPath(Path path) {
+        return rules.test(path, -1);
+    }
+
+    boolean testNode(Path path, JsonNode node) {
+        return true;
+    }
+
+
+    private static Rule makeRuleFromPath(String jsonPath) {
+        if (jsonPath.length() <= 1 || jsonPath.charAt(0) != '$')
             throw new IllegalArgumentException("Expression not rooted");
 
         int regionStart = 1;
-        Matcher matcher = pattern.matcher(path);
+        Matcher matcher = pattern.matcher(jsonPath);
         ArrayList<String> subExpressions = new ArrayList<>();
 
         while (regionStart < matcher.regionEnd()) {
@@ -63,17 +74,11 @@ class PathMatcher implements Predicate<Path> {
 
         if (nextRule == null)
             throw new IllegalArgumentException("No sub-expressions");
-        rules = new RuleStart(nextRule);
+
+        return nextRule;
     }
 
-
-    public @Override boolean test(Path path) {
-        return rules.test(path, -1);
-    }
-
-
-
-    private Rule makeRule(Rule nextRule, String expr) {
+    private static Rule makeRule(Rule nextRule, String expr) {
         if (".".equals(expr)) {
             return new RuleAttributeDescent(nextRule);
         } else if (".*".equals(expr)) {
@@ -89,7 +94,7 @@ class PathMatcher implements Predicate<Path> {
         }
     }
 
-    private Rule makeRuleFromQuotedNames(Rule nextRule, String expr) {
+    private static Rule makeRuleFromQuotedNames(Rule nextRule, String expr) {
         expr = expr.substring(1, expr.length()-1);
         String[] names = expr.split(",");
         for (int index = names.length; --index >= 0; ) {
@@ -99,13 +104,13 @@ class PathMatcher implements Predicate<Path> {
         return new RuleAttributeName(nextRule, names);
     }
 
-    private Rule makeRuleFromDottedNames(Rule nextRule, String expr) {
+    private static Rule makeRuleFromDottedNames(Rule nextRule, String expr) {
         expr = expr.substring(1);
         String[] names = expr.split("\\|");
         return new RuleAttributeName(nextRule, names);
     }
 
-    private Rule makeRuleFromIndexRange(Rule nextRule, String expr) {
+    private static Rule makeRuleFromIndexRange(Rule nextRule, String expr) {
         expr = expr.substring(1, expr.length()-1);
         String[] parts = expr.split(":", -1);
         long minIndex = parts[0].isEmpty() ? 0 : Long.parseLong(parts[0]);
@@ -116,7 +121,7 @@ class PathMatcher implements Predicate<Path> {
         return new RuleArrayRange(nextRule, minIndex, maxIndex, step);
     }
 
-    private Rule makeRuleFromIndexList(Rule nextRule, String expr) {
+    private static Rule makeRuleFromIndexList(Rule nextRule, String expr) {
         expr = expr.substring(1, expr.length()-1);
         String[] parts = expr.split(",");
         long[] indexes = new long[parts.length];
