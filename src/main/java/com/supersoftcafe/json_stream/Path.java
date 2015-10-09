@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+
 public class Path extends ArrayList<Path.Node> {
     public Path() {
 
@@ -50,8 +51,6 @@ public class Path extends ArrayList<Path.Node> {
 
 
     public static abstract class Node {
-        public abstract <T> T visit(Visitor<T> visitor);
-
         public boolean isArray() {
             return false;
         }
@@ -88,10 +87,6 @@ public class Path extends ArrayList<Path.Node> {
         public String toString() {
             return "[" + index + "]";
         }
-
-        public <T> T visit(Visitor<T> visitor) {
-            return visitor.visit(this);
-        }
     }
 
     public static final class AttributeName extends Node {
@@ -112,15 +107,6 @@ public class Path extends ArrayList<Path.Node> {
         public String toString() {
             return "." + name;
         }
-
-        public <T> T visit(Visitor<T> visitor) {
-            return visitor.visit(this);
-        }
-    }
-
-    public interface Visitor<T> {
-        T visit(AttributeName attributeName);
-        T visit(ArrayIndex arrayIndex);
     }
 
     private static final ArrayIndex[] ARRAY_INDEXES;
