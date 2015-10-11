@@ -1,23 +1,132 @@
 package com.supersoftcafe.json_stream;
 
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 
-public class Path extends ArrayList<Path.Node> {
+public final class Path extends AbstractList<Path.Node> implements Cloneable {
+    public static final String DUMMY_ATTRIBUTE_NAME = "-dummy-attribute-";
+    public static final long   DUMMY_ARRAY_INDEX    = -1234567890l;
+
+    private static final Node[] EMPTY_NODES_ARRAY = new Path.Node[0];
+    private static final int INITIAL_ARRAY_SIZE = 8;
+
+    private static final ArrayIndex[] COMMON_ARRAY_INDEXES;
+    static {
+        COMMON_ARRAY_INDEXES = new ArrayIndex[1000];
+        for (int index = 1000; --index >= 0; )
+            COMMON_ARRAY_INDEXES[index] = new ArrayIndex(index);
+    }
+
+
+
+    private Path.Node[] nodes ;
+    private int          size ;
+    private boolean  readOnly ;
+    private Path readOnlyCopy ;
+
+
+
     public Path() {
-
+        nodes = EMPTY_NODES_ARRAY;
     }
 
-    public Path(List<Node> pathNodes) {
-        super(pathNodes);
+    public Path(Collection<Path.Node> collection) {
+        nodes = collection.toArray(new Path.Node[size = collection.size()]);
+    }
+
+    private Path(Path.Node[] nodes, int size, boolean readOnly) {
+        this.nodes = nodes;
+        this.size = size;
+        this.readOnly = readOnly;
     }
 
 
-    public Path copy() {
-        return new Path(this);
+
+    public Path readOnlyCopy() {
+        Path copy = readOnlyCopy;
+        if (copy != null) return copy;
+        copy = new Path(nodes, size, true);
+        return copy.readOnlyCopy = readOnlyCopy = copy;
+    }
+
+    public Path mutableCopy() {
+        Path path = new Path(Arrays.copyOf(nodes, size), size, false);
+        path.readOnlyCopy = readOnlyCopy;
+        return path;
+    }
+
+    public @Override Path clone() {
+        return readOnly ? readOnlyCopy() : mutableCopy();
+    }
+
+
+
+    @Override
+    public int size() {
+        return size;
+    }
+
+    @Override
+    public Node get(int index) {
+        return nodes[index];
+    }
+
+    public @Override void add(int index, Path.Node node) {
+        if (readOnly) throw new IllegalStateException();
+        if (index < 0 || index > size) throw new IndexOutOfBoundsException();
+
+        readOnlyCopy = null;
+        if (size >= nodes.length) nodes = Arrays.copyOf(nodes, size==0 ? INITIAL_ARRAY_SIZE : size*2);
+        if (index < size) System.arraycopy(nodes, index, nodes, index + 1, size - index);
+        nodes[index] = node;
+        size++;
+    }
+
+    public @Override Node set(int index, Node element) {
+        if (readOnly) throw new IllegalStateException();
+        if (index < 0 || index >= size) throw new IndexOutOfBoundsException();
+
+        readOnlyCopy = null;
+        Node oldElement = nodes[index];
+        nodes[index] = element;
+        return oldElement;
+    }
+
+    public @Override Node remove(int index) {
+        if (readOnly) throw new IllegalStateException();
+        if (index < 0 || index >= size) throw new IndexOutOfBoundsException();
+
+        readOnlyCopy = null;
+        Node oldElement = nodes[index];
+        if (index < size-1) System.arraycopy(nodes, index+1, nodes, index, size - index - 1);
+        nodes[--size] = null; // To help GC
+        return oldElement;
+    }
+
+
+
+    public void pushDummyArray() {
+        pushArrayIndex(DUMMY_ARRAY_INDEX);
+    }
+
+    public void pushDummyObject() {
+        pushAttributeName(DUMMY_ATTRIBUTE_NAME);
+    }
+
+
+    public Path.ArrayIndex popArray() {
+        if (!peek().isArray()) {
+            throw new IllegalStateException();
+        }
+        return (Path.ArrayIndex) pop();
+    }
+
+    public Path.AttributeName popObject() {
+        if (!peek().isObject()) {
+            throw new IllegalStateException();
+        }
+        return (Path.AttributeName) pop();
     }
 
 
@@ -26,7 +135,34 @@ public class Path extends ArrayList<Path.Node> {
     }
 
     public void pushArrayIndex(long index) {
-        add(index>=0 && index<1000 ? ARRAY_INDEXES[(int)index] : new ArrayIndex(index));
+        add(index >= 0 && index < 1000 ? COMMON_ARRAY_INDEXES[(int) index] : new ArrayIndex(index));
+    }
+
+
+    public void updateArrayIndex(long index) {
+        Path.Node node = peek();
+        if (!node.isArray()) {
+            throw new IllegalStateException();
+        }
+        pop();
+        pushArrayIndex(index);
+    }
+
+    public void updateAttributeName(String name) {
+        Path.Node node = peek();
+        if (!node.isObject()) {
+            throw new IllegalStateException();
+        }
+        pop();
+        pushAttributeName(name);
+    }
+
+    public void advanceArrayIndex() {
+        Path.Node node = peek();
+        if (node != null && node.isArray()) {
+            long index = pop().getIndex();
+            pushArrayIndex(index != DUMMY_ARRAY_INDEX ? index + 1 : 0);
+        }
     }
 
 
@@ -37,8 +173,10 @@ public class Path extends ArrayList<Path.Node> {
     }
 
     public Node pop() {
-        if (isEmpty()) throw new NoSuchElementException();
-        return remove(size() - 1);
+        if (readOnly) throw new IllegalStateException();
+        if (size == 0) throw new NoSuchElementException();
+        readOnlyCopy = null;
+        return nodes[--size];
     }
 
     public String toString() {
@@ -51,6 +189,9 @@ public class Path extends ArrayList<Path.Node> {
 
 
     public static abstract class Node {
+        private Node() {
+        }
+
         public boolean isArray() {
             return false;
         }
@@ -107,12 +248,5 @@ public class Path extends ArrayList<Path.Node> {
         public String toString() {
             return "." + name;
         }
-    }
-
-    private static final ArrayIndex[] ARRAY_INDEXES;
-    static {
-        ARRAY_INDEXES = new ArrayIndex[1000];
-        for (int index = 1000; --index >= 0; )
-            ARRAY_INDEXES[index] = new ArrayIndex(index);
     }
 }

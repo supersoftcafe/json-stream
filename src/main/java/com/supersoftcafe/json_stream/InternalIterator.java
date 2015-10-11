@@ -39,7 +39,7 @@ final class InternalIterator<T> implements Iterator<T>, BiConsumer<Path, T> {
     void setup(Closeable underlyingStream, JsonParser jsonParser, JavaType type, String[] jsonPaths) {
         List<ElementMatcher<?>> matchers = new ArrayList<>();
         for (String jsonPath : jsonPaths)
-            matchers.add(new ElementMatcher<>(MatchRule.create(jsonPath), type, this));
+            matchers.add(new ElementMatcher<>(MatchRule.valueOf(jsonPath), type, this));
         internalParser = new InternalParser(matchers, underlyingStream, jsonParser);
     }
 

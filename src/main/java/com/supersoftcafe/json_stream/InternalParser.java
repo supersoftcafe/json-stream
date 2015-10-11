@@ -70,65 +70,32 @@ final class InternalParser {
                 case VALUE_FALSE:
                 case VALUE_TRUE:
                 case VALUE_NULL:
-                    updateArrayIndex();
+                    path.advanceArrayIndex();
                     consumed = tryConsumeElement();
             }
 
             // Try to proceed
             switch (token) {
                 case START_ARRAY:
-                    pushArray();
+                    path.pushDummyArray();
                     break;
                 case START_OBJECT:
-                    pushObject();
+                    path.pushDummyObject();
                     break;
                 case END_ARRAY:
-                    popArray();
+                    path.popArray();
                     break;
                 case END_OBJECT:
-                    popObject();
+                    path.popObject();
                     break;
                 case FIELD_NAME:
-                    updateAttributeName(jsonParser().getCurrentName());
+                    path.updateAttributeName(jsonParser().getCurrentName());
                     break;
             }
         } while (!consumed);
         return true;
     }
 
-    private void updateArrayIndex() {
-        Path.Node node = path.peek();
-        if (node != null && node.isArray())
-            path.pushArrayIndex(path.pop().getIndex() + 1);
-    }
-
-    private void updateAttributeName(String name) {
-        Path.Node node = popObject();
-        if (!node.isObject()) throw new IllegalStateException();
-        path.pushAttributeName(name);
-    }
-
-    private void pushArray() {
-        path.pushArrayIndex(-1);
-    }
-
-    private void pushObject() {
-        path.pushAttributeName("-null-");
-    }
-
-    private Path.ArrayIndex popArray() {
-        Path.Node node = path.pop();
-        if (!node.isArray()) throw new IllegalStateException();
-        return (Path.ArrayIndex) node;
-    }
-
-    private Path.AttributeName popObject() {
-        Path.Node node = path.pop();
-        if (!node.isObject()) {
-            throw new IllegalStateException();
-        }
-        return (Path.AttributeName) node;
-    }
 
     private boolean tryConsumeElement() throws IOException {
         boolean consumed = false;

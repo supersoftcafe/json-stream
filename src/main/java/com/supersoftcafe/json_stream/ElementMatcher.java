@@ -35,7 +35,7 @@ final class ElementMatcher<T> {
 
     void callWithData(Path path, JsonNode jsonNode) throws IOException {
         T element = OBJECT_READER.forType(type).readValue(jsonNode);
-        handler.accept(path.copy(), element);
+        handler.accept(path.readOnlyCopy(), element);
     }
 
     JsonNode readTree(JsonParser jsonParser) throws IOException {

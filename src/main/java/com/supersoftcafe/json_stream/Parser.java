@@ -97,19 +97,19 @@ public final class Parser {
 
 
     public <T> Parser when(String path, Class<T> clazz, BiConsumer<Path, T> handler) {
-        return when(MatchRule.create(path), TypeRef.constructType(clazz), handler);
+        return when(MatchRule.valueOf(path), TypeRef.constructType(clazz), handler);
     }
 
     public <T> Parser when(String path, TypeRef<T> type, BiConsumer<Path, T> handler) {
-        return when(MatchRule.create(path), TypeRef.constructType(type), handler);
+        return when(MatchRule.valueOf(path), TypeRef.constructType(type), handler);
     }
 
     public <T> Parser when(String path, Class<T> clazz, Consumer<T> handler) {
-        return when(MatchRule.create(path), TypeRef.constructType(clazz), (Path x, T y) -> handler.accept(y));
+        return when(MatchRule.valueOf(path), TypeRef.constructType(clazz), (Path x, T y) -> handler.accept(y));
     }
 
     public <T> Parser when(String path, TypeRef<T> type, Consumer<T> handler) {
-        return when(MatchRule.create(path), TypeRef.constructType(type), (Path x, T y) -> handler.accept(y));
+        return when(MatchRule.valueOf(path), TypeRef.constructType(type), (Path x, T y) -> handler.accept(y));
     }
 
 
