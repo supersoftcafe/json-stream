@@ -6,17 +6,14 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JavaType;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 
-final class InternalIterator<T> implements Iterator<T>, BiConsumer<Path, T> {
-    T element;
-    boolean nextFound;
-    InternalParser internalParser;
+final class InternalIterator<T> implements Iterator<T> {
+    private InternalParser internalParser;
+    private ArrayDeque<T> elements;
+    private boolean nextFound;
 
 
     InternalIterator(JsonFactory jsonFactory, InputStream in, JavaType type, String[] jsonPaths) {
@@ -36,20 +33,20 @@ final class InternalIterator<T> implements Iterator<T>, BiConsumer<Path, T> {
     }
 
 
-    void setup(Closeable underlyingStream, JsonParser jsonParser, JavaType type, String[] jsonPaths) {
+    private void setup(Closeable underlyingStream, JsonParser jsonParser, JavaType type, String[] jsonPaths) {
         List<ElementMatcher<?>> matchers = new ArrayList<>();
+        BiConsumer<Path, T> consumer = (path, value) -> elements.addFirst(value);
         for (String jsonPath : jsonPaths)
-            matchers.add(new ElementMatcher<>(MatchRule.valueOf(jsonPath), type, this));
-        internalParser = new InternalParser(matchers, underlyingStream, jsonParser);
-    }
+            matchers.add(new ElementMatcher<>(MatchRule.valueOf(jsonPath), type, consumer));
 
-    public @Override void accept(Path nodes, T t) {
-        element = t;
+        internalParser = new InternalParser(matchers, underlyingStream, jsonParser);
+        elements = new ArrayDeque<>();
+        nextFound = false;
     }
 
     public @Override boolean hasNext() {
         try {
-            boolean result = nextFound || (nextFound = internalParser.parseOne());
+            boolean result = nextFound || (nextFound = !elements.isEmpty() || internalParser.parseOne());
             if (result == false) internalParser.parseEnd();
             return result;
         } catch (IOException e) {
@@ -60,7 +57,7 @@ final class InternalIterator<T> implements Iterator<T>, BiConsumer<Path, T> {
     public @Override T next() {
         if (hasNext()) {
             nextFound = false;
-            return element;
+            return elements.removeLast();
         } else {
             throw new NoSuchElementException();
         }

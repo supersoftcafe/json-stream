@@ -23,6 +23,18 @@ public class PathTest {
 
 
     @Test
+    public void testValueOf() throws Exception {
+        Path path = Path.valueOf("$[3].fred[4].bill.bert");
+
+        assertEquals(5, path.size());
+        assertEquals(  "[3]", path.get(0).toString());
+        assertEquals(".fred", path.get(1).toString());
+        assertEquals(  "[4]", path.get(2).toString());
+        assertEquals(".bill", path.get(3).toString());
+        assertEquals(".bert", path.get(4).toString());
+    }
+
+    @Test
     public void testReadOnlyCopy() throws Exception {
         path.pushAttributeName("one");
         path.pushAttributeName("two");

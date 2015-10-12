@@ -1,17 +1,16 @@
 package com.supersoftcafe.json_stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.supersoftcafe.json_stream.rules.*;
 
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public final class MatchRule {
+final class MatchRule extends AbstractList<Rule> {
     private final static String RECURSIVE            = "\\.";
+    private final static String ARRAY_ANY            = "\\[\\*\\]";
     private final static String ARRAY_LIST           = "\\[[0-9]+(,[0-9]+)*\\]";
     private final static String ARRAY_RANGE          = "\\[([0-9]+)?:([0-9]+)?(:[0-9]+)?\\]";
     private final static String ATTRIBUTE_ANY        = "\\.\\*";
@@ -19,31 +18,49 @@ public final class MatchRule {
     private final static String ATTRIBUTE_QUOTE_NAME = "\\['[a-z_][a-z0-9_]*'(,'[a-z_][a-z0-9_]*')*\\]";
 
     private final static Pattern pattern = Pattern.compile(
-            "(" + ARRAY_LIST + ")|(" + ARRAY_RANGE + ")|(" + ATTRIBUTE_ANY + ")|(" + ATTRIBUTE_DOT_NAME + ")|(" + ATTRIBUTE_QUOTE_NAME + ")|(" + RECURSIVE + ")"
+            "(" + ARRAY_ANY + ")|(" + ARRAY_LIST + ")|(" + ARRAY_RANGE + ")|(" + ATTRIBUTE_ANY + ")|(" + ATTRIBUTE_DOT_NAME + ")|(" + ATTRIBUTE_QUOTE_NAME + ")|(" + RECURSIVE + ")"
             , Pattern.CASE_INSENSITIVE);
 
     private static Map<String, MatchRule> MATCH_RULE_CACHE = new ConcurrentHashMap<>();
 
 
-    private final String jsonPath;
+    private String toStringResult;
     private final Rule[] rules;
 
 
-    public MatchRule(String jsonPath) {
-        this.rules = makeRulesFromPath(this.jsonPath = jsonPath);
+
+    MatchRule(Rule... rules) {
+        for (Rule rule : this.rules = rules.clone()) Objects.requireNonNull(rule);
     }
 
-    public static MatchRule valueOf(String jsonPath) {
+    MatchRule(String jsonPath) {
+        this(makeRulesFromPath(jsonPath));
+    }
+
+    static MatchRule valueOf(String jsonPath) {
         return MATCH_RULE_CACHE.computeIfAbsent(jsonPath, MatchRule::new);
     }
 
     public @Override String toString() {
-        return jsonPath;
+        if (toStringResult == null) {
+            StringBuilder sb = new StringBuilder("$");
+            for (Rule rule : rules) sb.append(rule);
+            toStringResult = sb.toString();
+        }
+        return toStringResult;
     }
 
 
+    public @Override Rule get(int index) {
+        return rules[index];
+    }
 
-    public boolean testPath(final Path path) {
+    public @Override int size() {
+        return rules.length;
+    }
+
+
+    boolean testPath(final Path path) {
         return new Rule.Context() {
             int ruleIndex = -1;
             int pathIndex = -1;
@@ -52,17 +69,20 @@ public final class MatchRule {
                 return path.get(pathIndex);
             }
 
-            public @Override boolean tryNextNode() {
-                return internalNext(ruleIndex);
+            public @Override boolean skipRule() {
+                return internalNext(ruleIndex++, pathIndex);
             }
 
-            public @Override boolean next() {
-                return internalNext(ruleIndex++);
+            public @Override boolean retryRule() {
+                return internalNext(ruleIndex, pathIndex++);
             }
 
-            private boolean internalNext(int savedRuleIndex) {
+            public @Override boolean nextRule() {
+                return internalNext(ruleIndex++, pathIndex++);
+            }
+
+            private boolean internalNext(int savedRuleIndex, int savedPathIndex) {
                 boolean result;
-                int savedPathIndex = pathIndex++;
                 if (pathIndex >= path.size() || ruleIndex >= rules.length) {
                     result = pathIndex == path.size() && ruleIndex == rules.length;
                 } else {
@@ -72,17 +92,16 @@ public final class MatchRule {
                 pathIndex = savedPathIndex;
                 return result;
             }
-        }.next();
+        }.nextRule();
     }
 
-    public boolean testNode(Path path, JsonNode node) {
+    boolean testNode(Path path, JsonNode node) {
         return true;
     }
 
 
-
     private static Rule[] makeRulesFromPath(String jsonPath) {
-        if (jsonPath.length() <= 1 || jsonPath.charAt(0) != '$') {
+        if (jsonPath.length() == 0 || jsonPath.charAt(0) != '$') {
             throw new IllegalArgumentException("Expression not rooted");
         }
 
@@ -109,13 +128,15 @@ public final class MatchRule {
 
     private static Rule makeRule(String expr) {
         if (".".equals(expr)) {
-            return new RuleAttributeDescent();
+            return RuleDescent.valueOf(expr);
         } else if (".*".equals(expr)) {
-            return new RuleAnyAttributeName();
+            return RuleAnyAttributeName.valueOf(expr);
         } else if (expr.startsWith("['") || expr.startsWith(".")) {
             return RuleAttributeName.valueOf(expr);
         } else if (expr.startsWith("[")) {
-            if (expr.contains(":")) {
+            if (expr.equals("[*]")) {
+                return RuleAnyArrayIndex.valueOf(expr);
+            } else if (expr.contains(":")) {
                 return RuleArrayRange.valueOf(expr);
             } else {
                 return RuleArrayIndex.valueOf(expr);

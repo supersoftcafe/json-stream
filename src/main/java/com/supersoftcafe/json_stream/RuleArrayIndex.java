@@ -1,18 +1,26 @@
-package com.supersoftcafe.json_stream.rules;
+package com.supersoftcafe.json_stream;
 
-import com.supersoftcafe.json_stream.Path;
+import java.util.Arrays;
 
-public class RuleArrayIndex extends Rule {
+final class RuleArrayIndex extends Rule {
     private final long[] indexes;
 
-    public RuleArrayIndex(long... indexes) {
+    RuleArrayIndex(long... indexes) {
         if (indexes.length == 0) {
             throw new IllegalArgumentException("Must be at least one array index");
         }
-        this.indexes = indexes;
+        Arrays.sort(this.indexes = indexes.clone());
     }
 
-    public static RuleArrayIndex valueOf(String expr) {
+    int size() {
+        return indexes.length;
+    }
+
+    long indexAt(int index) {
+        return indexes[index];
+    }
+
+    static RuleArrayIndex valueOf(String expr) {
         int length = expr.length();
         if (length < 3 || expr.charAt(0) != '[' || expr.charAt(length-1) != ']') {
             throw new IllegalArgumentException();
@@ -27,14 +35,14 @@ public class RuleArrayIndex extends Rule {
         return new RuleArrayIndex(indexes);
     }
 
-    public @Override boolean test(Context context) {
+    @Override boolean test(Context context) {
         Path.Node node = context.currentNode();
 
         if (node.isArray()) {
             long arrayIndex = node.getIndex();
             for (long matchIndex : indexes) {
                 if (arrayIndex == matchIndex) {
-                    return context.next();
+                    return context.nextRule();
                 }
             }
         }
@@ -49,5 +57,13 @@ public class RuleArrayIndex extends Rule {
             seperator = ',';
         }
         return sb.append(']').toString();
+    }
+
+    public @Override int hashCode() {
+        return Arrays.hashCode(indexes);
+    }
+
+    public @Override boolean equals(Object o) {
+        return this == o || o instanceof RuleArrayIndex && Arrays.equals(indexes, ((RuleArrayIndex)o).indexes);
     }
 }

@@ -1,8 +1,6 @@
 package com.supersoftcafe.json_stream;
 
-
 import java.util.*;
-
 
 public final class Path extends AbstractList<Path.Node> implements Cloneable {
     public static final String DUMMY_ATTRIBUTE_NAME = "-dummy-attribute-";
@@ -31,17 +29,49 @@ public final class Path extends AbstractList<Path.Node> implements Cloneable {
         nodes = EMPTY_NODES_ARRAY;
     }
 
-    public Path(Collection<Path.Node> collection) {
-        nodes = collection.toArray(new Path.Node[size = collection.size()]);
+    public Path(Node... nodes) {
+        this.size = (this.nodes = nodes.clone()).length;
+        for (Node node : nodes) Objects.requireNonNull(node);
     }
 
-    private Path(Path.Node[] nodes, int size, boolean readOnly) {
+    public Path(Collection<Node> collection) {
+        this(collection.toArray(new Node[collection.size()]));
+    }
+
+    private Path(Node[] nodes, int size, boolean readOnly) {
         this.nodes = nodes;
         this.size = size;
         this.readOnly = readOnly;
     }
 
 
+    public static Path valueOf(String pathString) {
+        MatchRule matchRule = new MatchRule(pathString);
+
+        Path path = new Path();
+        for (Rule rule : matchRule) {
+            if (rule instanceof RuleArrayIndex && ((RuleArrayIndex) rule).size() == 1) {
+                path.pushArrayIndex(((RuleArrayIndex) rule).indexAt(0));
+            } else if (rule instanceof RuleAttributeName && ((RuleAttributeName) rule).size() == 1) {
+                path.pushAttributeName(((RuleAttributeName) rule).nameAt(0));
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
+
+        return path;
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder("$");
+        for (Node node : this) sb.append(node);
+        return sb.toString();
+    }
+
+
+    public boolean isReadOnly() {
+        return readOnly;
+    }
 
     public Path readOnlyCopy() {
         Path copy = readOnlyCopy;
@@ -179,12 +209,6 @@ public final class Path extends AbstractList<Path.Node> implements Cloneable {
         return nodes[--size];
     }
 
-    public String toString() {
-        StringBuilder sb = new StringBuilder("$");
-        for (Node node : this) sb.append(node);
-        return sb.toString();
-    }
-
 
 
 
@@ -210,10 +234,10 @@ public final class Path extends AbstractList<Path.Node> implements Cloneable {
     }
 
 
-    public static final class ArrayIndex extends Node {
+    static final class ArrayIndex extends Node {
         private final long index;
 
-        private ArrayIndex(long index) {
+        ArrayIndex(long index) {
             this.index = index;
         }
 
@@ -230,10 +254,10 @@ public final class Path extends AbstractList<Path.Node> implements Cloneable {
         }
     }
 
-    public static final class AttributeName extends Node {
+    static final class AttributeName extends Node {
         private final String name;
 
-        private AttributeName(String name) {
+        AttributeName(String name) {
             this.name = name;
         }
 

@@ -10,9 +10,9 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 
-public class ParserTest {
+public class BatteryTests {
     private InputStream open() throws IOException {
-        return ParserTest.class.getResourceAsStream("/test.json");
+        return BatteryTests.class.getResourceAsStream("/test.json");
     }
 
     @Test

@@ -1,11 +1,11 @@
-package com.supersoftcafe.json_stream.rules;
+package com.supersoftcafe.json_stream;
 
-import com.supersoftcafe.json_stream.Path;
+final class RuleArrayRange extends Rule {
+    private static final RuleArrayRange ALL_ENTRIES_SINGLETON = new RuleArrayRange(0, Long.MAX_VALUE, 1);
 
-public class RuleArrayRange extends Rule {
     private final long minIndex, maxIndex, step;
 
-    public RuleArrayRange(long minIndex, long maxIndex, long step) {
+    RuleArrayRange(long minIndex, long maxIndex, long step) {
         if (step == 0) {
             throw new IllegalArgumentException("Step must not be zero");
         }
@@ -15,7 +15,7 @@ public class RuleArrayRange extends Rule {
         this.step = step;
     }
 
-    public static RuleArrayRange valueOf(String expr) {
+    static RuleArrayRange valueOf(String expr) {
         int length = expr.length();
         if (length < 2 || expr.charAt(0) != '[' || expr.charAt(length-1) != ']') {
             throw new IllegalArgumentException();
@@ -32,23 +32,42 @@ public class RuleArrayRange extends Rule {
         return new RuleArrayRange(minIndex, maxIndex, step);
     }
 
-    public @Override boolean test(Context context) {
+    @Override boolean test(Context context) {
         Path.Node node = context.currentNode();
         if (node.isArray()) {
             long arrayIndex = node.getIndex();
-            if (arrayIndex >= minIndex && arrayIndex <= maxIndex && (arrayIndex % step) == 0) {
-                return context.next();
+            if (arrayIndex >= minIndex && arrayIndex <= maxIndex && ((arrayIndex-minIndex) % step) == 0) {
+                return context.nextRule();
             }
         }
         return false;
     }
 
     public @Override String toString() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder("[");
         if (minIndex != 0) sb.append(minIndex);
         sb.append(':');
         if (maxIndex != Long.MAX_VALUE) sb.append(maxIndex);
         if (step != 1) sb.append(':').append(step);
-        return sb.toString();
+        return sb.append("]").toString();
+    }
+
+    public @Override boolean equals(Object other) {
+        if (this == other) return true;
+        if (other == null || !(other instanceof RuleArrayRange)) return false;
+
+        RuleArrayRange that = (RuleArrayRange) other;
+
+        if (minIndex != that.minIndex) return false;
+        if (maxIndex != that.maxIndex) return false;
+        return step == that.step;
+
+    }
+
+    public @Override int hashCode() {
+        int result = (int) (minIndex ^ (minIndex >>> 32));
+        result = 31 * result + (int) (maxIndex ^ (maxIndex >>> 32));
+        result = 31 * result + (int) (step ^ (step >>> 32));
+        return result;
     }
 }

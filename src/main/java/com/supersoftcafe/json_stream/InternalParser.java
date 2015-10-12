@@ -14,16 +14,16 @@ import java.util.Objects;
 
 final class InternalParser {
     private final List<ElementMatcher<?>> elementMatchers;
-    private final Path path;
-    private final Closeable underlyingStream;
     private final ArrayList<JsonParser> parserStack;
+    private final Closeable underlyingStream;
+    private final Path path;
 
 
     InternalParser(List<ElementMatcher<?>> elementMatchers, Closeable underlyingStream, JsonParser jsonParser) {
         this.elementMatchers = elementMatchers;
-        this.path = new Path();
-        this.underlyingStream = Objects.requireNonNull(underlyingStream);
         this.parserStack = new ArrayList<>();
+        this.underlyingStream = Objects.requireNonNull(underlyingStream);
+        this.path = new Path();
 
         pushParser(jsonParser);
     }
