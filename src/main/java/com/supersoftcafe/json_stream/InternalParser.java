@@ -17,13 +17,15 @@ final class InternalParser {
     private final ArrayList<JsonParser> parserStack;
     private final Closeable underlyingStream;
     private final Path path;
+    private final boolean allowSubTrees;
 
 
-    InternalParser(List<ElementMatcher<?>> elementMatchers, Closeable underlyingStream, JsonParser jsonParser) {
+    InternalParser(List<ElementMatcher<?>> elementMatchers, Closeable underlyingStream, JsonParser jsonParser, boolean allowSubTrees) {
         this.elementMatchers = elementMatchers;
         this.parserStack = new ArrayList<>();
         this.underlyingStream = Objects.requireNonNull(underlyingStream);
         this.path = new Path();
+        this.allowSubTrees = allowSubTrees;
 
         pushParser(jsonParser);
     }
@@ -72,6 +74,9 @@ final class InternalParser {
                 case VALUE_NULL:
                     path.advanceArrayIndex();
                     consumed = tryConsumeElement();
+                    if (consumed && !allowSubTrees) {
+                        return true;
+                    }
             }
 
             // Try to proceed
@@ -93,27 +98,30 @@ final class InternalParser {
                     break;
             }
         } while (!consumed);
+
         return true;
     }
 
 
     private boolean tryConsumeElement() throws IOException {
-        boolean consumed = false;
+        JsonNode jsonNode = null;
 
         for (ElementMatcher<?> matcher : elementMatchers) {
             if (matcher.doesPathMatch(path)) {
-                JsonNode jsonNode = matcher.readTree(jsonParser());
-                JsonParser nestedParser = jsonNode.traverse();
-                nestedParser.nextToken();
-                pushParser(nestedParser);
-
-                if (matcher.doesTreeMatch(path, jsonNode)) {
-                    matcher.callWithData(path, jsonNode);
-                    consumed = true;
+                if (jsonNode == null) {
+                    jsonNode = matcher.readTree(jsonParser());
                 }
+
+                matcher.callWithData(path, jsonNode);
             }
         }
 
-        return consumed;
+        if (jsonNode != null && allowSubTrees) {
+            JsonParser nestedParser = jsonNode.traverse();
+            nestedParser.nextToken();
+            pushParser(nestedParser);
+        }
+
+        return jsonNode != null;
     }
 }

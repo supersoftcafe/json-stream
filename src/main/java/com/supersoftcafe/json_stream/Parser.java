@@ -14,6 +14,7 @@ import java.util.stream.StreamSupport;
 public final class Parser {
     private final static JsonFactory JSON_FACTORY = new JsonFactory();
 
+    private boolean allowSubTrees = false;
     private final List<ElementMatcher<?>> elementMatchers;
 
 
@@ -113,6 +114,11 @@ public final class Parser {
     }
 
 
+    public Parser withSubTrees() {
+        allowSubTrees = true;
+        return this;
+    }
+
 
     public static Parser create() {
         return new Parser();
@@ -130,7 +136,7 @@ public final class Parser {
 
 
     private void parse(Closeable underlyingStream, JsonParser jsonParser) throws IOException {
-        InternalParser parser = new InternalParser(elementMatchers, underlyingStream, jsonParser);
+        InternalParser parser = new InternalParser(elementMatchers, underlyingStream, jsonParser, allowSubTrees);
         try {
             while (parser.parseOne());
         } finally {

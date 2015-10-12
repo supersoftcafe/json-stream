@@ -39,7 +39,7 @@ final class InternalIterator<T> implements Iterator<T> {
         for (String jsonPath : jsonPaths)
             matchers.add(new ElementMatcher<>(MatchRule.valueOf(jsonPath), type, consumer));
 
-        internalParser = new InternalParser(matchers, underlyingStream, jsonParser);
+        internalParser = new InternalParser(matchers, underlyingStream, jsonParser, true);
         elements = new ArrayDeque<>();
         nextFound = false;
     }

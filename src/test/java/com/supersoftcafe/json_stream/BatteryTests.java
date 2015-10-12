@@ -1,11 +1,13 @@
 package com.supersoftcafe.json_stream;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
 
@@ -42,5 +44,33 @@ public class BatteryTests {
 
         Parser.stream(open(), TestBean.class, "$.*[1,3,7].someAttr")
                 .forEach(value -> System.out.printf("Second %s %d\n", value.getValue1(), value.getValue2()));
+    }
+
+
+    
+
+    private InputStream openBig() throws IOException {
+        return new GZIPInputStream(BatteryTests.class.getResourceAsStream("/big.json.gz"));
+    }
+
+    @Test @Ignore
+    public void bigCountCards1() throws Exception {
+        TypeRef<?> typeRef = new TypeRef<Map<String, Object>>() {};
+        long count = Parser.stream(openBig(), typeRef, "$..cards[*]").count();
+        System.out.printf("Count is %d\n", count);
+    }
+
+    @Test @Ignore
+    public void bigCountCards2() throws Exception {
+        TypeRef<?> typeRef = new TypeRef<Map<String, Object>>() {};
+        long count = Parser.stream(openBig(), typeRef, "$..cards[*]").count();
+        System.out.printf("Count is %d\n", count);
+    }
+
+    @Test @Ignore
+    public void bigCountCards3() throws Exception {
+        TypeRef<?> typeRef = new TypeRef<Map<String, Object>>() {};
+        long count = Parser.stream(openBig(), typeRef, "$..cards[*]").count();
+        System.out.printf("Count is %d\n", count);
     }
 }
