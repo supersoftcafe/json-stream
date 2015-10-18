@@ -1,4 +1,4 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
 
 final class RuleAnyArrayIndex extends Rule {
     private static final RuleAnyArrayIndex SINGLETON = new RuleAnyArrayIndex();

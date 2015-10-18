@@ -1,4 +1,4 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
 
 class RuleDescent extends Rule {
     private static final RuleDescent SINGLETON = new RuleDescent();

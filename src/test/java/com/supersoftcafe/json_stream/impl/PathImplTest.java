@@ -1,4 +1,5 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
+
 
 import org.junit.After;
 import org.junit.Before;
@@ -7,13 +8,13 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 
-public class PathTest {
+public class PathImplTest {
 
-    Path path;
+    PathImpl path;
 
     @Before
     public void before() {
-        path = new Path();
+        path = new PathImpl();
     }
 
     @After
@@ -24,12 +25,12 @@ public class PathTest {
 
     @Test
     public void testValueOf() throws Exception {
-        Path path = Path.valueOf("$[3].fred[4].bill.bert");
+        PathImpl path = PathImpl.valueOf("$[3].fred[4].bill.bert");
 
         assertEquals(5, path.size());
-        assertEquals(  "[3]", path.get(0).toString());
+        assertEquals("[3]", path.get(0).toString());
         assertEquals(".fred", path.get(1).toString());
-        assertEquals(  "[4]", path.get(2).toString());
+        assertEquals("[4]", path.get(2).toString());
         assertEquals(".bill", path.get(3).toString());
         assertEquals(".bert", path.get(4).toString());
     }
@@ -39,8 +40,8 @@ public class PathTest {
         path.pushAttributeName("one");
         path.pushAttributeName("two");
 
-        Path readOnlyCopy1 = path.readOnlyCopy();
-        Path readOnlyCopy2 = path.readOnlyCopy();
+        PathImpl readOnlyCopy1 = path.readOnlyCopy();
+        PathImpl readOnlyCopy2 = path.readOnlyCopy();
 
         assertEquals(2, readOnlyCopy1.size());
         assertEquals("one", readOnlyCopy1.get(0).getName());
@@ -54,7 +55,7 @@ public class PathTest {
     public void testReadOnlyCopy_whenModified() throws Exception {
         path.pushAttributeName("one");
 
-        Path readOnlyCopy = path.readOnlyCopy();
+        PathImpl readOnlyCopy = path.readOnlyCopy();
 
         readOnlyCopy.pushArrayIndex(1);
     }
@@ -64,7 +65,7 @@ public class PathTest {
     public void testMutableCopy() throws Exception {
         path.pushAttributeName("one");
 
-        Path mutableCopy = path.readOnlyCopy().mutableCopy();
+        PathImpl mutableCopy = path.readOnlyCopy().mutableCopy();
         mutableCopy.pushArrayIndex(2l);
 
         assertEquals(2, mutableCopy.size());
@@ -77,7 +78,7 @@ public class PathTest {
         path.pushAttributeName("one");
         path.pushAttributeName("two");
 
-        Path clonedPath = path.clone();
+        PathImpl clonedPath = path.clone();
         clonedPath.pop();
         clonedPath.pushAttributeName("three");
 
@@ -94,7 +95,7 @@ public class PathTest {
         path.pushAttributeName("one");
         path.pushAttributeName("two");
 
-        Path otherPath = new Path();
+        PathImpl otherPath = new PathImpl();
         otherPath.pushAttributeName("three");
         path.set(1, otherPath.peek());
 
@@ -108,7 +109,7 @@ public class PathTest {
         path.pushAttributeName("one");
         path.pushAttributeName("two");
 
-        Path otherPath = new Path();
+        PathImpl otherPath = new PathImpl();
         otherPath.pushAttributeName("three");
         path.set(2, otherPath.peek());
     }
@@ -137,7 +138,7 @@ public class PathTest {
     public void testPopArray_IfArray() throws Exception {
         path.pushArrayIndex(1l);
 
-        Path.ArrayIndex node = path.popArray();
+        PathImpl.ArrayIndex node = path.popArray();
 
         assertEquals(1l, node.getIndex());
     }
@@ -146,14 +147,14 @@ public class PathTest {
     public void testPopArray_IfObject() throws Exception {
         path.pushAttributeName("fred");
 
-        Path.ArrayIndex node = path.popArray();
+        PathImpl.ArrayIndex node = path.popArray();
     }
 
     @Test
     public void testPopObject_IfObject() throws Exception {
         path.pushAttributeName("fred");
 
-        Path.AttributeName node = path.popObject();
+        PathImpl.AttributeName node = path.popObject();
 
         assertEquals("fred", node.getName());
     }
@@ -162,7 +163,7 @@ public class PathTest {
     public void testPopObject_IfArray() throws Exception {
         path.pushArrayIndex(1l);
 
-        Path.AttributeName node = path.popObject();
+        PathImpl.AttributeName node = path.popObject();
     }
 
     @Test
@@ -218,7 +219,7 @@ public class PathTest {
 
         path.advanceArrayIndex();
 
-        assertEquals(Path.DUMMY_ATTRIBUTE_NAME, path.peek().getName());
+        assertEquals(PathImpl.DUMMY_ATTRIBUTE_NAME, path.peek().getName());
     }
 
     @Test
@@ -226,7 +227,7 @@ public class PathTest {
         path.pushAttributeName("fred");
         path.pushArrayIndex(2);
 
-        Path.Node node = path.peek();
+        PathImpl.NodeImpl node = path.peek();
 
         assertEquals(2l, node.getIndex());
     }
@@ -237,7 +238,7 @@ public class PathTest {
         path.pushAttributeName("fred");
         path.pushAttributeName("bill");
 
-        Path.Node node = path.pop();
+        PathImpl.NodeImpl node = path.pop();
 
         assertEquals(2, path.size());
         assertEquals(2l, path.get(0).getIndex());

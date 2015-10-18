@@ -1,4 +1,4 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
 
 final class RuleAnyAttributeName extends Rule {
     private static final RuleAnyAttributeName SINGLETON = new RuleAnyAttributeName();

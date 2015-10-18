@@ -1,4 +1,4 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
 
 abstract class Rule {
     Rule() {
@@ -7,7 +7,7 @@ abstract class Rule {
     abstract boolean test(Context context);
 
     interface Context {
-        Path.Node currentNode();
+        PathImpl.NodeImpl currentNode();
         boolean retryRule();
         boolean nextRule();
         boolean skipRule();

@@ -1,4 +1,4 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JavaType;
@@ -15,25 +15,25 @@ final class ElementMatcher<T> {
 
     private final MatchRule matchRule;
     private final JavaType type;
-    private final BiConsumer<Path, T> handler;
+    private final BiConsumer<? super PathImpl, ? super T> handler;
 
 
-    ElementMatcher(MatchRule matchRule, JavaType type, BiConsumer<Path, T> handler) {
+    ElementMatcher(MatchRule matchRule, JavaType type, BiConsumer<? super PathImpl, ? super T> handler) {
         this.matchRule = matchRule;
         this.type = type;
         this.handler = handler;
     }
 
 
-    boolean doesPathMatch(Path path) throws IOException {
+    boolean doesPathMatch(PathImpl path) throws IOException {
         return matchRule.testPath(path);
     }
 
-    boolean doesTreeMatch(Path path, JsonNode jsonNode) {
+    boolean doesTreeMatch(PathImpl path, JsonNode jsonNode) {
         return matchRule.testNode(path, jsonNode);
     }
 
-    void callWithData(Path path, JsonNode jsonNode) throws IOException {
+    void callWithData(PathImpl path, JsonNode jsonNode) throws IOException {
         T element = OBJECT_READER.forType(type).readValue(jsonNode);
         handler.accept(path.readOnlyCopy(), element);
     }

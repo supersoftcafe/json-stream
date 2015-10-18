@@ -1,4 +1,4 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
 
 final class RuleArrayRange extends Rule {
     private static final RuleArrayRange ALL_ENTRIES_SINGLETON = new RuleArrayRange(0, Long.MAX_VALUE, 1);
@@ -33,7 +33,7 @@ final class RuleArrayRange extends Rule {
     }
 
     @Override boolean test(Context context) {
-        Path.Node node = context.currentNode();
+        PathImpl.NodeImpl node = context.currentNode();
         if (node.isArray()) {
             long arrayIndex = node.getIndex();
             if (arrayIndex >= minIndex && arrayIndex < maxIndex && ((arrayIndex-minIndex) % step) == 0) {

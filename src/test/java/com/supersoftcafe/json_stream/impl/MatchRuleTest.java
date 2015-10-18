@@ -1,4 +1,5 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
+
 
 import org.junit.Test;
 
@@ -33,10 +34,10 @@ public class MatchRuleTest {
 
     @Test
     public void testTestPath_deepAttribute() throws Exception {
-        Path pathGood    = Path.valueOf("$.bill.frank.fred");
-        Path pathGoodIsh = Path.valueOf("$.bill.frank.fred.another");
-        Path pathBad     = Path.valueOf("$.bill.jane.frank");
-        Path pathArray   = Path.valueOf("$.bill[3].fred");
+        PathImpl pathGood    = PathImpl.valueOf("$.bill.frank.fred");
+        PathImpl pathGoodIsh = PathImpl.valueOf("$.bill.frank.fred.another");
+        PathImpl pathBad     = PathImpl.valueOf("$.bill.jane.frank");
+        PathImpl pathArray   = PathImpl.valueOf("$.bill[3].fred");
         MatchRule matchRule = new MatchRule(
                 new RuleDescent(),
                 new RuleAttributeName("fred")
@@ -52,12 +53,12 @@ public class MatchRuleTest {
     public void testTestPath_complex() throws Exception {
         MatchRule matchRule = MatchRule.valueOf("$..fred[3,4,5][1:10:2].*[*]");
 
-        assertTrue(matchRule.testPath(Path.valueOf("$.granny.fred[4][3].group[123]")));
-        assertTrue(matchRule.testPath(Path.valueOf("$.granny.uncle.fred[4][3].group[123]")));
-        assertTrue(matchRule.testPath(Path.valueOf("$.fred[4][3].group[123]")));
-        assertFalse(matchRule.testPath(Path.valueOf("$.granny.fred[4][4].group[123]")));
-        assertFalse(matchRule.testPath(Path.valueOf("$.granny.fred[2][3].group[123]")));
-        assertFalse(matchRule.testPath(Path.valueOf("$.granny.fredy[4][3].group[123]")));
+        assertTrue(matchRule.testPath(PathImpl.valueOf("$.granny.fred[4][3].group[123]")));
+        assertTrue(matchRule.testPath(PathImpl.valueOf("$.granny.uncle.fred[4][3].group[123]")));
+        assertTrue(matchRule.testPath(PathImpl.valueOf("$.fred[4][3].group[123]")));
+        assertFalse(matchRule.testPath(PathImpl.valueOf("$.granny.fred[4][4].group[123]")));
+        assertFalse(matchRule.testPath(PathImpl.valueOf("$.granny.fred[2][3].group[123]")));
+        assertFalse(matchRule.testPath(PathImpl.valueOf("$.granny.fredy[4][3].group[123]")));
     }
 
 

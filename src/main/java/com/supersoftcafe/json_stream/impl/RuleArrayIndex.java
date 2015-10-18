@@ -1,4 +1,4 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
 
 import java.util.Arrays;
 
@@ -36,7 +36,7 @@ final class RuleArrayIndex extends Rule {
     }
 
     @Override boolean test(Context context) {
-        Path.Node node = context.currentNode();
+        PathImpl.NodeImpl node = context.currentNode();
 
         if (node.isArray()) {
             long arrayIndex = node.getIndex();

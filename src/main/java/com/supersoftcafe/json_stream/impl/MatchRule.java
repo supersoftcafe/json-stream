@@ -1,4 +1,4 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -60,12 +60,13 @@ final class MatchRule extends AbstractList<Rule> {
     }
 
 
-    boolean testPath(final Path path) {
+    boolean testPath(final PathImpl path) {
         return new Rule.Context() {
             int ruleIndex = -1;
             int pathIndex = -1;
 
-            public @Override Path.Node currentNode() {
+            public @Override
+            PathImpl.NodeImpl currentNode() {
                 return path.get(pathIndex);
             }
 
@@ -95,7 +96,7 @@ final class MatchRule extends AbstractList<Rule> {
         }.nextRule();
     }
 
-    boolean testNode(Path path, JsonNode node) {
+    boolean testNode(PathImpl path, JsonNode node) {
         return true;
     }
 

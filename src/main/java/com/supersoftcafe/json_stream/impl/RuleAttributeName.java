@@ -1,4 +1,4 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -42,7 +42,7 @@ final class RuleAttributeName extends Rule {
     }
 
     @Override boolean test(Context context) {
-        Path.Node node = context.currentNode();
+        PathImpl.NodeImpl node = context.currentNode();
         if (node.isObject()) {
             String nodeName = node.getName();
             for (String name : names) {

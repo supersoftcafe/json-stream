@@ -1,4 +1,4 @@
-package com.supersoftcafe.json_stream;
+package com.supersoftcafe.json_stream.impl;
 
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -12,19 +12,19 @@ import java.util.List;
 import java.util.Objects;
 
 
-final class InternalParser {
+public final class InternalParser {
     private final List<ElementMatcher<?>> elementMatchers;
     private final ArrayList<JsonParser> parserStack;
     private final Closeable underlyingStream;
-    private final Path path;
+    private final PathImpl path;
     private final boolean allowSubTrees;
 
 
-    InternalParser(List<ElementMatcher<?>> elementMatchers, Closeable underlyingStream, JsonParser jsonParser, boolean allowSubTrees) {
+    public InternalParser(List<ElementMatcher<?>> elementMatchers, Closeable underlyingStream, JsonParser jsonParser, boolean allowSubTrees) {
         this.elementMatchers = elementMatchers;
         this.parserStack = new ArrayList<>();
         this.underlyingStream = Objects.requireNonNull(underlyingStream);
-        this.path = new Path();
+        this.path = new PathImpl();
         this.allowSubTrees = allowSubTrees;
 
         pushParser(jsonParser);
