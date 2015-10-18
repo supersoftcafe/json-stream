@@ -1,85 +1,63 @@
 package com.supersoftcafe.json_stream.impl;
 
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static com.supersoftcafe.json_stream.impl.PathTokenType.*;
 
 /**
  * WORK IN PROGRESS!
  */
-public final class PathTokenizer implements Iterator<Object> {
-    private String path;
-    private int   index;
+public final class PathTokenizer {
+    private final Pattern pattern;
+    private final PathTokenType tokenType;
 
 
-    private PathTokenizer(String path) {
-        this.path = path;
-        this.index = 0;
+
+    private PathTokenizer(PathTokenType tokenType, String pattern) {
+        this.tokenType = tokenType;
+        this.pattern = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+    }
+
+    private static PathTokenizer x(PathTokenType tokenType, String pattern) {
+        return new PathTokenizer(tokenType, pattern);
     }
 
 
-    public @Override boolean hasNext() {
-        return index < path.length();
-    }
 
-    private static boolean isNumber(char chr) {
-        return chr >= '0' && chr <= '9';
-    }
+    private static final PathTokenizer[] tokens = new PathTokenizer[] {
+            x(DOLLAR      , "\\$"),
+            x(STAR        , "\\*"),
+            x(DOT_DOT     , "\\.\\."),
+            x(DOT         , "\\."),
+            x(OPEN_SQUARE , "["),
+            x(CLOSE_SQUARE, "]"),
+            x(NUMBER      , "[-+]?[0-9]*\\.?[0-9]+(e[-+]?[0-9]+)?"),
+            x(LITERAL     , "\"([^\"]|(\\\"))*\"")
+    };
 
-    public @Override Object next() {
-        char chr = path.charAt(index);
-        switch (chr) {
-            case '$':
-                return dollar();
-            case '.':
-                if ((index+1) < path.length() && isNumber(path.charAt(index+1))) {
-                    return number();
-                } else if ((index+1) < path.length() && path.charAt(index+1) == '.') {
-                    return dotDot();
-                } else {
-                    return dot();
+
+
+    public PathToken[] parse(String path) {
+        List<PathToken> result = new ArrayList<>();
+
+        while (path.length() > 0) {
+            for (PathTokenizer tokenizer : tokens) {
+                Matcher matcher = tokenizer.pattern.matcher(path);
+                if (matcher.lookingAt()) {
+                    String t = matcher.group();
+                    path = path.substring(t.length());
+                    result.add(new PathToken(tokenizer.tokenType, t));
+                    break;
                 }
-            case '[':
-                return openSquare();
-            case ']':
-                return closeSquare();
-            case '0': case '1': case '2': case '3':
-            case '4': case '5': case '6': case '7':
-            case '8': case '9':
-                return number();
-
-            default:
                 throw new JsonPathFormatException();
+            }
         }
-    }
 
-    private Object dollar() {
-        ++index;
-        return DOLLAR;
+        return result.toArray(new PathToken[result.size()]);
     }
-
-    private Object dot() {
-        ++index;
-        return DOT;
-    }
-
-    private Object dotDot() {
-        index += 2;
-        return DOT;
-    }
-
-    private Object openSquare() {
-        ++index;
-        return OPEN_SQUARE;
-    }
-
-    private Object closeSquare() {
-        ++index;
-        return OPEN_SQUARE;
-    }
-
-    private Object number() {
-        throw new UnsupportedOperationException();
-    }
-
 }
