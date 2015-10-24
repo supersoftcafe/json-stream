@@ -1,4 +1,4 @@
-package com.supersoftcafe.json_stream.impl;
+package com.supersoftcafe.json_stream.impl.experiment;
 
 
 import java.util.ArrayList;
@@ -6,17 +6,16 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * WORK IN PROGRESS!
- */
+
 public final class Lexer {
     private final static Pattern pattern = buildPattern();
     private final static Type[] tokenTypes = new Type[Type.values().length+1];
 
     private static Pattern buildPattern() {
         StringBuffer sb = new StringBuffer();
-        for (Type type : Type.values())
+        for (Type type : Type.values()) {
             sb.append("|(?<").append(type.name()).append('>').append(type.getPattern()).append(')');
+        }
         return Pattern.compile(sb.substring(1), Pattern.CASE_INSENSITIVE);
     }
 
@@ -27,10 +26,11 @@ public final class Lexer {
 
         Matcher matcher = pattern.matcher(path);
         while (matcher.find()) {
+            int position = matcher.start();
             for (Type type : Type.values()) {
                 String value = matcher.group(type.name());
                 if (value != null) {
-                    result.add(new Token(type, type.convert(value)));
+                    result.add(new Token(type, type.convert(value), position));
                     break;
                 }
             }
@@ -60,6 +60,7 @@ public final class Lexer {
         STAR("\\*"),
         OPENSQUARE("\\["),
         CLOSESQUARE("\\]"),
+        COLON(":"),
 
         INTEGER("[-+]?[0-9]+") {Object convert(String v) {return Long.parseLong(v);}},
         FLOAT("[-+]?[0-9]*\\.?[0-9]+(e[-+]?[0-9]+)?") {Object convert(String v) {return Double.parseDouble(v);}},
@@ -86,12 +87,14 @@ public final class Lexer {
     }
 
     public final static class Token {
-        private final Type type;
+        private final Type    type;
         private final Object value;
+        private final int position;
 
-        public Token(Type type, Object value) {
+        Token(Type type, Object value, int position) {
             this.type = type;
-            this.value = value;
+            this.value  = value;
+            this.position = position;
         }
 
         public Type getType() {
@@ -102,12 +105,17 @@ public final class Lexer {
             return value;
         }
 
+        public int getPosition() {
+            return position;
+        }
+
         @Override public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
             Token token = (Token) o;
 
+            if (position != token.position) return false;
             if (type != token.type) return false;
             return value.equals(token.value);
 
@@ -116,6 +124,7 @@ public final class Lexer {
         @Override public int hashCode() {
             int result = type.hashCode();
             result = 31 * result + value.hashCode();
+            result = 31 * result + position;
             return result;
         }
 
@@ -123,6 +132,7 @@ public final class Lexer {
             return "Token{" +
                     "type=" + type +
                     ", value=" + value +
+                    ", position=" + position +
                     '}';
         }
     }
