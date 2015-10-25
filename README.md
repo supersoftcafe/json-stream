@@ -15,7 +15,7 @@ It uses **Java 8** features for code brevity and API simplicity.
 
 A ~~picture~~ code sample speaks a thousand words.
 
-'''
+```
 InputStream open() {
     return new FileInputStream("sample.json");
 }
@@ -39,5 +39,5 @@ void somethingMoreSpecific() {
     Thingy thingy = Parsers.getOne(open(), Thingy.class, "$..someArray[3].thingy");
     doSomethingWithThingy(thingy);
 }
-'''
+```
 
