@@ -14,6 +14,13 @@
     <jacksonVersion>2.6.2</jacksonVersion>
   </properties>
 
+  <licenses>
+    <license>
+      <name>New BSD (3-clause)</name>
+      <url>LICENSE.txt</url>
+    </license>
+  </licenses>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
