@@ -56,3 +56,14 @@ InputStream open() {
     return IOUtils.noClose(new FileInputStream("sample.json"));
 }
 ```
+
+Or
+
+```
+ZipInputStream zipIn;
+
+InputStream open() {
+    zipIn.nextEntry();
+    return IOUtils.altClose(zipIn, zipIn::closeEntry);
+}
+```
