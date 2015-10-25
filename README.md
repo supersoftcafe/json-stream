@@ -41,3 +41,18 @@ void somethingMoreSpecific() {
 }
 ```
 
+The stream is closed by the library. This is important behaviour, as we don't in all cases know when
+the library has finished with the stream, and so can't easily encapsulate calls with open/close
+pairs. To deal with this, all API methods consistently close the given stream.
+
+If you don't want it closed, use a non-closing wrapper. This will be important if you happen to be
+reading from a ZIP file, where 'closeEntry' is the preferred method of closing a single entry, and
+not to close the underlying stream.
+
+For convenience, the following is provided.
+
+```
+InputStream open() {
+    return IOUtils.noClose(new FileInputStream("sample.json"));
+}
+```
