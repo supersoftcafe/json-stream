@@ -9,8 +9,9 @@ public interface Path extends List<Path.Node> {
 
     interface Node {
         boolean isArray();
-        boolean isObject();
-        String getName();
-        long getIndex();
+        long   getArrayIndex();
+
+        boolean isAttribute();
+        String getAttributeName();
     }
 }

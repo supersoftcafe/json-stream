@@ -35,7 +35,7 @@ final class RuleArrayRange extends Rule {
     @Override boolean test(Context context) {
         PathImpl.NodeImpl node = context.currentNode();
         if (node.isArray()) {
-            long arrayIndex = node.getIndex();
+            long arrayIndex = node.getArrayIndex();
             if (arrayIndex >= minIndex && arrayIndex < maxIndex && ((arrayIndex-minIndex) % step) == 0) {
                 return context.nextRule();
             }

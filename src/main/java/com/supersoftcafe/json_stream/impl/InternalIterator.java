@@ -1,7 +1,6 @@
 package com.supersoftcafe.json_stream.impl;
 
 
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JavaType;
 import com.supersoftcafe.json_stream.TypeRef;
@@ -20,7 +19,7 @@ public final class InternalIterator<T> implements Iterator<T> {
 
     private static JsonParser createParser(InputStream in) {
         try {
-            return ParserImpl.JSON_FACTORY.createParser(in);
+            return CallbackParserImpl.JSON_FACTORY.createParser(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -28,7 +27,7 @@ public final class InternalIterator<T> implements Iterator<T> {
 
     private static JsonParser createParser(Reader in) {
         try {
-            return ParserImpl.JSON_FACTORY.createParser(in);
+            return CallbackParserImpl.JSON_FACTORY.createParser(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -36,13 +35,6 @@ public final class InternalIterator<T> implements Iterator<T> {
 
 
 
-    public InternalIterator(InputStream in, Class<T> type, String[] jsonPaths) {
-        setup(in, createParser(in), TypeCache.constructType(type), jsonPaths);
-    }
-
-    public InternalIterator(Reader in, Class<T> type, String[] jsonPaths) {
-        setup(in, createParser(in), TypeCache.constructType(type), jsonPaths);
-    }
 
     public InternalIterator(InputStream in, TypeRef<T> type, String[] jsonPaths) {
         setup(in, createParser(in), TypeCache.constructType(type), jsonPaths);

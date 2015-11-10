@@ -12,15 +12,18 @@ import java.util.List;
 import java.util.Objects;
 
 
-public final class InternalParser {
-    private final List<ElementMatcher<?>> elementMatchers;
+public final class InternalParser<CONTEXT> implements Closeable {
+    private final CONTEXT context;
+    private final List<ElementMatcher<CONTEXT, ?>> elementMatchers;
     private final ArrayList<JsonParser> parserStack;
     private final Closeable underlyingStream;
     private final PathImpl path;
     private final boolean allowSubTrees;
 
 
-    public InternalParser(List<ElementMatcher<?>> elementMatchers, Closeable underlyingStream, JsonParser jsonParser, boolean allowSubTrees) {
+    InternalParser(CONTEXT context, List<ElementMatcher<CONTEXT, ?>> elementMatchers,
+                          Closeable underlyingStream, JsonParser jsonParser, boolean allowSubTrees) {
+        this.context = context;
         this.elementMatchers = elementMatchers;
         this.parserStack = new ArrayList<>();
         this.underlyingStream = Objects.requireNonNull(underlyingStream);
@@ -35,7 +38,7 @@ public final class InternalParser {
         return !parserStack.isEmpty() && nextJsonElement();
     }
 
-    void parseEnd() throws IOException {
+    @Override public void close() throws IOException {
         underlyingStream.close();
     }
 
@@ -106,13 +109,13 @@ public final class InternalParser {
     private boolean tryConsumeElement() throws IOException {
         JsonNode jsonNode = null;
 
-        for (ElementMatcher<?> matcher : elementMatchers) {
+        for (ElementMatcher<CONTEXT, ?> matcher : elementMatchers) {
             if (matcher.doesPathMatch(path)) {
                 if (jsonNode == null) {
                     jsonNode = matcher.readTree(jsonParser());
                 }
 
-                matcher.callWithData(path, jsonNode);
+                matcher.callWithData(context, path, jsonNode);
             }
         }
 

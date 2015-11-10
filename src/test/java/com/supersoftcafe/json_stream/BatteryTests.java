@@ -25,7 +25,7 @@ public class BatteryTests {
         StringReader in = new StringReader(json);
 
         // When
-        Long value = Parsers.getOne(in, Long.class, "$.field2");
+        Long value = Parser.getOne(in, Long.class, "$.field2");
 
         // Then
         assertNotNull(value);
@@ -34,18 +34,18 @@ public class BatteryTests {
 
     @Test
     public void batteryOfTests() throws Exception {
-        Parsers.create()
+        Parser.create()
                 .when("$.metadata", new TypeRef<Map<String, Object>>(){}, value -> System.out.printf("Got map %s\n", value))
                 .when("$.*[1:2].someAttr", TestBean.class, value -> System.out.printf("Got one %s %d\n", value.getValue1(), value.getValue2()))
                 .when("$..puff", String.class, value -> System.out.printf("Puff %s\n", value))
                 .nestedSubTrees(true)
                 .parse(open());
 
-        Map<String, Object> metadata = Parsers.getOne(open(), new TypeRef<Map<String, Object>>() {
+        Map<String, Object> metadata = Parser.getOne(open(), new TypeRef<Map<String, Object>>() {
         }, "$.metadata");
         System.out.printf("Metadata %s\n", metadata);
 
-        Parsers.stream(open(), TestBean.class, "$.*[1,3,7].someAttr")
+        Parser.stream(open(), TestBean.class, "$.*[1,3,7].someAttr")
                 .forEach(value -> System.out.printf("Second %s %d\n", value.getValue1(), value.getValue2()));
     }
 
@@ -59,21 +59,21 @@ public class BatteryTests {
     @Test @Ignore
     public void bigCountCards1() throws Exception {
         TypeRef<?> typeRef = new TypeRef<Map<String, Object>>() {};
-        long count = Parsers.stream(openBig(), typeRef, "$..cards[*]").count();
+        long count = Parser.stream(openBig(), typeRef, "$..cards[*]").count();
         System.out.printf("Count is %d\n", count);
     }
 
     @Test @Ignore
     public void bigCountCards2() throws Exception {
         TypeRef<?> typeRef = new TypeRef<Map<String, Object>>() {};
-        long count = Parsers.stream(openBig(), typeRef, "$..cards[*]").count();
+        long count = Parser.stream(openBig(), typeRef, "$..cards[*]").count();
         System.out.printf("Count is %d\n", count);
     }
 
     @Test @Ignore
     public void bigCountCards3() throws Exception {
         TypeRef<?> typeRef = new TypeRef<Map<String, Object>>() {};
-        long count = Parsers.stream(openBig(), typeRef, "$..cards[*]").count();
+        long count = Parser.stream(openBig(), typeRef, "$..cards[*]").count();
         System.out.printf("Count is %d\n", count);
     }
 }

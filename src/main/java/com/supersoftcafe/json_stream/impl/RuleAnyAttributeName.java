@@ -14,7 +14,7 @@ final class RuleAnyAttributeName extends Rule {
     }
 
     @Override boolean test(Context context) {
-        if (context.currentNode().isObject()) {
+        if (context.currentNode().isAttribute()) {
             return context.nextRule();
         }
         return false;

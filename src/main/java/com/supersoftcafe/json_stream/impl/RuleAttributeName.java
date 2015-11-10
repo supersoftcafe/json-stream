@@ -43,8 +43,8 @@ final class RuleAttributeName extends Rule {
 
     @Override boolean test(Context context) {
         PathImpl.NodeImpl node = context.currentNode();
-        if (node.isObject()) {
-            String nodeName = node.getName();
+        if (node.isAttribute()) {
+            String nodeName = node.getAttributeName();
             for (String name : names) {
                 if (name.equals(nodeName)) {
                     return context.nextRule();

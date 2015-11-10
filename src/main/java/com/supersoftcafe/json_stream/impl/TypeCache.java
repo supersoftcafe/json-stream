@@ -17,6 +17,7 @@ public class TypeCache {
     }
 
     static JavaType constructType(TypeRef<?> type) {
+        if (type.isSimple()) return constructType((Class)type.getType());
         return TYPE_CACHE.computeIfAbsent(type, x -> TYPE_FACTORY.constructType(type.getType()));
     }
 }

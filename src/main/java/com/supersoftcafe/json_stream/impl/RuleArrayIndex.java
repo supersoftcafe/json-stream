@@ -39,7 +39,7 @@ final class RuleArrayIndex extends Rule {
         PathImpl.NodeImpl node = context.currentNode();
 
         if (node.isArray()) {
-            long arrayIndex = node.getIndex();
+            long arrayIndex = node.getArrayIndex();
             for (long matchIndex : indexes) {
                 if (arrayIndex == matchIndex) {
                     return context.nextRule();

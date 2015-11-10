@@ -44,11 +44,11 @@ public class PathImplTest {
         PathImpl readOnlyCopy2 = path.readOnlyCopy();
 
         assertEquals(2, readOnlyCopy1.size());
-        assertEquals("one", readOnlyCopy1.get(0).getName());
-        assertEquals("two", readOnlyCopy1.get(1).getName());
+        assertEquals("one", readOnlyCopy1.get(0).getAttributeName());
+        assertEquals("two", readOnlyCopy1.get(1).getAttributeName());
         assertEquals(2, readOnlyCopy2.size());
-        assertEquals("one", readOnlyCopy2.get(0).getName());
-        assertEquals("two", readOnlyCopy2.get(1).getName());
+        assertEquals("one", readOnlyCopy2.get(0).getAttributeName());
+        assertEquals("two", readOnlyCopy2.get(1).getAttributeName());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -69,8 +69,8 @@ public class PathImplTest {
         mutableCopy.pushArrayIndex(2l);
 
         assertEquals(2, mutableCopy.size());
-        assertEquals("one", mutableCopy.get(0).getName());
-        assertEquals(2l, mutableCopy.get(1).getIndex());
+        assertEquals("one", mutableCopy.get(0).getAttributeName());
+        assertEquals(2l, mutableCopy.get(1).getArrayIndex());
     }
 
     @Test
@@ -83,11 +83,11 @@ public class PathImplTest {
         clonedPath.pushAttributeName("three");
 
         assertEquals(2, path.size());
-        assertEquals("one", path.get(0).getName());
-        assertEquals("two", path.get(1).getName());
+        assertEquals("one", path.get(0).getAttributeName());
+        assertEquals("two", path.get(1).getAttributeName());
         assertEquals(2, clonedPath.size());
-        assertEquals("one", clonedPath.get(0).getName());
-        assertEquals("three", clonedPath.get(1).getName());
+        assertEquals("one", clonedPath.get(0).getAttributeName());
+        assertEquals("three", clonedPath.get(1).getAttributeName());
     }
 
     @Test
@@ -100,8 +100,8 @@ public class PathImplTest {
         path.set(1, otherPath.peek());
 
         assertEquals(2, path.size());
-        assertEquals("one", path.get(0).getName());
-        assertEquals("three", path.get(1).getName());
+        assertEquals("one", path.get(0).getAttributeName());
+        assertEquals("three", path.get(1).getAttributeName());
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
@@ -123,8 +123,8 @@ public class PathImplTest {
         path.remove(1);
 
         assertEquals(2, path.size());
-        assertEquals("one", path.get(0).getName());
-        assertEquals("three", path.get(1).getName());
+        assertEquals("one", path.get(0).getAttributeName());
+        assertEquals("three", path.get(1).getAttributeName());
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
@@ -140,7 +140,7 @@ public class PathImplTest {
 
         PathImpl.ArrayIndex node = path.popArray();
 
-        assertEquals(1l, node.getIndex());
+        assertEquals(1l, node.getArrayIndex());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -156,7 +156,7 @@ public class PathImplTest {
 
         PathImpl.AttributeName node = path.popObject();
 
-        assertEquals("fred", node.getName());
+        assertEquals("fred", node.getAttributeName());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -173,7 +173,7 @@ public class PathImplTest {
 
         path.updateArrayIndex(5l);
 
-        assertEquals(5l, path.peek().getIndex());
+        assertEquals(5l, path.peek().getArrayIndex());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -191,7 +191,7 @@ public class PathImplTest {
 
         path.updateAttributeName("fred");
 
-        assertEquals("fred", path.peek().getName());
+        assertEquals("fred", path.peek().getAttributeName());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -209,7 +209,7 @@ public class PathImplTest {
 
         path.advanceArrayIndex();
 
-        assertEquals(0l, path.peek().getIndex());
+        assertEquals(0l, path.peek().getArrayIndex());
     }
 
     @Test
@@ -219,7 +219,7 @@ public class PathImplTest {
 
         path.advanceArrayIndex();
 
-        assertEquals(PathImpl.DUMMY_ATTRIBUTE_NAME, path.peek().getName());
+        assertEquals(PathImpl.DUMMY_ATTRIBUTE_NAME, path.peek().getAttributeName());
     }
 
     @Test
@@ -229,7 +229,7 @@ public class PathImplTest {
 
         PathImpl.NodeImpl node = path.peek();
 
-        assertEquals(2l, node.getIndex());
+        assertEquals(2l, node.getArrayIndex());
     }
 
     @Test
@@ -241,9 +241,9 @@ public class PathImplTest {
         PathImpl.NodeImpl node = path.pop();
 
         assertEquals(2, path.size());
-        assertEquals(2l, path.get(0).getIndex());
-        assertEquals("fred", path.get(1).getName());
-        assertEquals("bill", node.getName());
+        assertEquals(2l, path.get(0).getArrayIndex());
+        assertEquals("fred", path.get(1).getAttributeName());
+        assertEquals("bill", node.getAttributeName());
     }
 
     @Test

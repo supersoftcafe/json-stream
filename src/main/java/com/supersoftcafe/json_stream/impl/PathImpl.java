@@ -4,7 +4,9 @@ import com.supersoftcafe.json_stream.Path;
 
 import java.util.*;
 
-public final class PathImpl extends AbstractList<Path.Node> implements Path, Cloneable {
+public final class PathImpl extends AbstractList<Path.Node>
+        implements Path, RandomAccess, Cloneable {
+
     public static final String DUMMY_ATTRIBUTE_NAME = "-dummy-attribute-";
     public static final long   DUMMY_ARRAY_INDEX    = -1234567890l;
 
@@ -155,7 +157,7 @@ public final class PathImpl extends AbstractList<Path.Node> implements Path, Clo
     }
 
     public PathImpl.AttributeName popObject() {
-        if (!peek().isObject()) {
+        if (!peek().isAttribute()) {
             throw new IllegalStateException();
         }
         return (PathImpl.AttributeName) pop();
@@ -182,7 +184,7 @@ public final class PathImpl extends AbstractList<Path.Node> implements Path, Clo
 
     public void updateAttributeName(String name) {
         NodeImpl node = peek();
-        if (!node.isObject()) {
+        if (!node.isAttribute()) {
             throw new IllegalStateException();
         }
         pop();
@@ -192,7 +194,7 @@ public final class PathImpl extends AbstractList<Path.Node> implements Path, Clo
     public void advanceArrayIndex() {
         NodeImpl node = peek();
         if (node != null && node.isArray()) {
-            long index = pop().getIndex();
+            long index = pop().getArrayIndex();
             pushArrayIndex(index != DUMMY_ARRAY_INDEX ? index + 1 : 0);
         }
     }
@@ -222,15 +224,15 @@ public final class PathImpl extends AbstractList<Path.Node> implements Path, Clo
             return false;
         }
 
-        public boolean isObject() {
+        public boolean isAttribute() {
             return false;
         }
 
-        public String getName() {
+        public String getAttributeName() {
             throw new UnsupportedOperationException();
         }
 
-        public long getIndex() {
+        public long getArrayIndex() {
             throw new UnsupportedOperationException();
         }
     }
@@ -247,7 +249,7 @@ public final class PathImpl extends AbstractList<Path.Node> implements Path, Clo
             return true;
         }
 
-        public @Override long getIndex() {
+        public @Override long getArrayIndex() {
             return index;
         }
 
@@ -263,11 +265,11 @@ public final class PathImpl extends AbstractList<Path.Node> implements Path, Clo
             this.name = name;
         }
 
-        public boolean isObject() {
+        public boolean isAttribute() {
             return true;
         }
 
-        public @Override String getName() {
+        public @Override String getAttributeName() {
             return name;
         }
 
