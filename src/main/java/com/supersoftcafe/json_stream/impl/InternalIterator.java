@@ -4,6 +4,7 @@ package com.supersoftcafe.json_stream.impl;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.supersoftcafe.json_stream.TypeRef;
 
 import java.io.*;
@@ -18,17 +19,17 @@ public final class InternalIterator<T> implements Iterator<T> {
 
 
 
-    private static JsonParser createParser(InputStream in) {
+    private static JsonParser createParser(ObjectReader objectReader, InputStream in) {
         try {
-            return ParserImpl.JSON_FACTORY.createParser(in);
+            return objectReader.getFactory().createParser(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    private static JsonParser createParser(Reader in) {
+    private static JsonParser createParser(ObjectReader objectReader, Reader in) {
         try {
-            return ParserImpl.JSON_FACTORY.createParser(in);
+            return objectReader.getFactory().createParser(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -36,29 +37,30 @@ public final class InternalIterator<T> implements Iterator<T> {
 
 
 
-    public InternalIterator(InputStream in, Class<T> type, String[] jsonPaths) {
-        setup(in, createParser(in), TypeCache.constructType(type), jsonPaths);
+    public InternalIterator(ObjectReader objectReader, InputStream in, Class<T> type, String[] jsonPaths) {
+        setup(objectReader, in, createParser(objectReader, in), TypeCache.constructType(type), jsonPaths);
     }
 
-    public InternalIterator(Reader in, Class<T> type, String[] jsonPaths) {
-        setup(in, createParser(in), TypeCache.constructType(type), jsonPaths);
+    public InternalIterator(ObjectReader objectReader, Reader in, Class<T> type, String[] jsonPaths) {
+        setup(objectReader, in, createParser(objectReader, in), TypeCache.constructType(type), jsonPaths);
     }
 
-    public InternalIterator(InputStream in, TypeRef<T> type, String[] jsonPaths) {
-        setup(in, createParser(in), TypeCache.constructType(type), jsonPaths);
+    public InternalIterator(ObjectReader objectReader, InputStream in, TypeRef<T> type, String[] jsonPaths) {
+        setup(objectReader, in, createParser(objectReader, in), TypeCache.constructType(type), jsonPaths);
     }
 
-    public InternalIterator(Reader in, TypeRef<T> type, String[] jsonPaths) {
-        setup(in, createParser(in), TypeCache.constructType(type), jsonPaths);
+    public InternalIterator(ObjectReader objectReader, Reader in, TypeRef<T> type, String[] jsonPaths) {
+        setup(objectReader, in, createParser(objectReader, in), TypeCache.constructType(type), jsonPaths);
     }
 
 
 
-    private void setup(Closeable underlyingStream, JsonParser jsonParser, JavaType type, String[] jsonPaths) {
+    private void setup(ObjectReader objectReader, Closeable underlyingStream,
+                       JsonParser jsonParser, JavaType type, String[] jsonPaths) {
         List<ElementMatcher<?>> matchers = new ArrayList<>();
         BiConsumer<PathImpl, T> consumer = (path, value) -> elements.addFirst(value);
         for (String jsonPath : jsonPaths)
-            matchers.add(new ElementMatcher<>(MatchRule.valueOf(jsonPath), type, consumer));
+            matchers.add(new ElementMatcher<>(objectReader, MatchRule.valueOf(jsonPath), type, consumer));
 
         internalParser = new InternalParser(matchers, underlyingStream, jsonParser, false);
         elements = new ArrayDeque<>();

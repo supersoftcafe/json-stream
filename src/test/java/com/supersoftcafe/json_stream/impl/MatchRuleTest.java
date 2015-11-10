@@ -8,23 +8,20 @@ import static org.junit.Assert.*;
 
 public class MatchRuleTest {
 
-    @Test
-    public void testValueOf_emptyRule() throws Exception {
+    @Test public void testValueOf_emptyRule() throws Exception {
         MatchRule matchRule = MatchRule.valueOf("$");
 
         assertEquals(0, matchRule.size());
     }
 
-    @Test
-    public void testValueOf_attribute() throws Exception {
+    @Test public void testValueOf_attribute() throws Exception {
         MatchRule matchRule = MatchRule.valueOf("$.fred");
 
         assertEquals(1, matchRule.size());
         assertEquals(matchRule.get(0), new RuleAttributeName("fred"));
     }
 
-    @Test
-    public void testValueOf_attributeSetAndArray() throws Exception {
+    @Test public void testValueOf_attributeSetAndArray() throws Exception {
         MatchRule matchRule = MatchRule.valueOf("$['fred','bill','bert'][1,2,3]");
 
         assertEquals(2, matchRule.size());
@@ -32,8 +29,7 @@ public class MatchRuleTest {
         assertEquals(matchRule.get(1), new RuleArrayIndex(1, 2, 3));
     }
 
-    @Test
-    public void testTestPath_deepAttribute() throws Exception {
+    @Test public void testTestPath_deepAttribute() throws Exception {
         PathImpl pathGood    = PathImpl.valueOf("$.bill.frank.fred");
         PathImpl pathGoodIsh = PathImpl.valueOf("$.bill.frank.fred.another");
         PathImpl pathBad     = PathImpl.valueOf("$.bill.jane.frank");
@@ -49,8 +45,7 @@ public class MatchRuleTest {
         assertTrue(matchRule.testPath(pathArray));
     }
 
-    @Test
-    public void testTestPath_complex() throws Exception {
+    @Test public void testTestPath_complex() throws Exception {
         MatchRule matchRule = MatchRule.valueOf("$..fred[3,4,5][1:10:2].*[*]");
 
         assertTrue(matchRule.testPath(PathImpl.valueOf("$.granny.fred[4][3].group[123]")));
@@ -62,8 +57,7 @@ public class MatchRuleTest {
     }
 
 
-    @Test
-    public void testToString() throws Exception {
+    @Test public void testToString() throws Exception {
         String expectedString = "$.oneName['oneOfTwo','twoOfTwo'][1][1,2,3][*][1:10][1:10:2].*.";
         MatchRule expectedRule = new MatchRule(
                 new RuleAttributeName("oneName"),

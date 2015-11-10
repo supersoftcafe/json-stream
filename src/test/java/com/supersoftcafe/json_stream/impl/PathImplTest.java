@@ -12,19 +12,16 @@ public class PathImplTest {
 
     PathImpl path;
 
-    @Before
-    public void before() {
+    @Before public void before() {
         path = new PathImpl();
     }
 
-    @After
-    public void after() {
+    @After public void after() {
         path = null;
     }
 
 
-    @Test
-    public void testValueOf() throws Exception {
+    @Test public void testValueOf() throws Exception {
         PathImpl path = PathImpl.valueOf("$[3].fred[4].bill.bert");
 
         assertEquals(5, path.size());
@@ -35,8 +32,7 @@ public class PathImplTest {
         assertEquals(".bert", path.get(4).toString());
     }
 
-    @Test
-    public void testReadOnlyCopy() throws Exception {
+    @Test public void testReadOnlyCopy() throws Exception {
         path.pushAttributeName("one");
         path.pushAttributeName("two");
 
@@ -61,8 +57,7 @@ public class PathImplTest {
     }
 
 
-    @Test
-    public void testMutableCopy() throws Exception {
+    @Test public void testMutableCopy() throws Exception {
         path.pushAttributeName("one");
 
         PathImpl mutableCopy = path.readOnlyCopy().mutableCopy();
@@ -73,8 +68,7 @@ public class PathImplTest {
         assertEquals(2l, mutableCopy.get(1).getIndex());
     }
 
-    @Test
-    public void testClone() throws Exception {
+    @Test public void testClone() throws Exception {
         path.pushAttributeName("one");
         path.pushAttributeName("two");
 
@@ -90,8 +84,7 @@ public class PathImplTest {
         assertEquals("three", clonedPath.get(1).getName());
     }
 
-    @Test
-    public void testSet() throws Exception {
+    @Test public void testSet() throws Exception {
         path.pushAttributeName("one");
         path.pushAttributeName("two");
 
@@ -114,8 +107,7 @@ public class PathImplTest {
         path.set(2, otherPath.peek());
     }
 
-    @Test
-    public void testRemove() throws Exception {
+    @Test public void testRemove() throws Exception {
         path.pushAttributeName("one");
         path.pushAttributeName("two");
         path.pushAttributeName("three");
@@ -134,8 +126,7 @@ public class PathImplTest {
         path.remove(1);
     }
 
-    @Test
-    public void testPopArray_IfArray() throws Exception {
+    @Test public void testPopArray_IfArray() throws Exception {
         path.pushArrayIndex(1l);
 
         PathImpl.ArrayIndex node = path.popArray();
@@ -150,8 +141,7 @@ public class PathImplTest {
         PathImpl.ArrayIndex node = path.popArray();
     }
 
-    @Test
-    public void testPopObject_IfObject() throws Exception {
+    @Test public void testPopObject_IfObject() throws Exception {
         path.pushAttributeName("fred");
 
         PathImpl.AttributeName node = path.popObject();
@@ -166,8 +156,7 @@ public class PathImplTest {
         PathImpl.AttributeName node = path.popObject();
     }
 
-    @Test
-    public void testUpdateArrayIndex() throws Exception {
+    @Test public void testUpdateArrayIndex() throws Exception {
         path.pushDummyArray();
         path.pushDummyArray();
 
@@ -184,8 +173,7 @@ public class PathImplTest {
         path.updateArrayIndex(5l);
     }
 
-    @Test
-    public void testUpdateAttributeName() throws Exception {
+    @Test public void testUpdateAttributeName() throws Exception {
         path.pushDummyObject();
         path.pushDummyObject();
 
@@ -202,8 +190,7 @@ public class PathImplTest {
         path.updateAttributeName("fred");
     }
 
-    @Test
-    public void testAdvanceArrayIndex_WhenArray() throws Exception {
+    @Test public void testAdvanceArrayIndex_WhenArray() throws Exception {
         path.pushDummyArray();
         path.pushDummyArray();
 
@@ -212,8 +199,7 @@ public class PathImplTest {
         assertEquals(0l, path.peek().getIndex());
     }
 
-    @Test
-    public void testAdvanceArrayIndex_WhenObject() throws Exception {
+    @Test public void testAdvanceArrayIndex_WhenObject() throws Exception {
         path.pushDummyArray();
         path.pushDummyObject();
 
@@ -222,8 +208,7 @@ public class PathImplTest {
         assertEquals(PathImpl.DUMMY_ATTRIBUTE_NAME, path.peek().getName());
     }
 
-    @Test
-    public void testPeek() throws Exception {
+    @Test public void testPeek() throws Exception {
         path.pushAttributeName("fred");
         path.pushArrayIndex(2);
 
@@ -232,8 +217,7 @@ public class PathImplTest {
         assertEquals(2l, node.getIndex());
     }
 
-    @Test
-    public void testPop() throws Exception {
+    @Test public void testPop() throws Exception {
         path.pushArrayIndex(2);
         path.pushAttributeName("fred");
         path.pushAttributeName("bill");
@@ -246,8 +230,7 @@ public class PathImplTest {
         assertEquals("bill", node.getName());
     }
 
-    @Test
-    public void testToString() throws Exception {
+    @Test public void testToString() throws Exception {
         path.pushArrayIndex(2);
         path.pushAttributeName("fred");
         path.pushAttributeName("bill");

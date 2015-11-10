@@ -3,6 +3,7 @@ package com.supersoftcafe.json_stream.impl;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.supersoftcafe.json_stream.Parser;
 import com.supersoftcafe.json_stream.Path;
 import com.supersoftcafe.json_stream.TypeRef;
@@ -13,13 +14,14 @@ import java.util.function.*;
 
 
 public final class ParserImpl implements Parser {
-    public final static JsonFactory JSON_FACTORY = new JsonFactory();
+    private final ObjectReader objectReader;
 
     private boolean allowSubTrees = false;
     private final List<ElementMatcher<?>> elementMatchers;
 
 
-    public ParserImpl() {
+    public ParserImpl(ObjectReader objectReader) {
+        this.objectReader = objectReader;
         this.elementMatchers = new ArrayList<>();
     }
 
@@ -51,11 +53,11 @@ public final class ParserImpl implements Parser {
     }
 
     public @Override void parse(InputStream in) throws IOException {
-        parse(in, JSON_FACTORY.createParser(in));
+        parse(in, objectReader.getFactory().createParser(in));
     }
 
     public @Override void parse(Reader in) throws IOException {
-        parse(in, JSON_FACTORY.createParser(in));
+        parse(in, objectReader.getFactory().createParser(in));
     }
 
 
@@ -71,7 +73,7 @@ public final class ParserImpl implements Parser {
     }
 
     private <T> ParserImpl when(MatchRule matcher, JavaType type, BiConsumer<? super Path, ? super T> handler) {
-        elementMatchers.add(new ElementMatcher<>(matcher, type, handler));
+        elementMatchers.add(new ElementMatcher<>(objectReader, matcher, type, handler));
         return this;
     }
 }
