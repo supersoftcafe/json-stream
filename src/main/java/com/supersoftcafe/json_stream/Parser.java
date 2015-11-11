@@ -9,10 +9,10 @@ import java.util.function.Consumer;
 
 
 public interface Parser {
-    <T> Parser when(String path, Class<  T> type, BiConsumer<? super Path, ? super T> handler);
-    <T> Parser when(String path, TypeRef<T> type, BiConsumer<? super Path, ? super T> handler);
-    <T> Parser when(String path, Class<  T> type, Consumer<? super T> handler);
-    <T> Parser when(String path, TypeRef<T> type, Consumer<? super T> handler);
+    <T> Parser withPath(String path, Class<T> type, BiConsumer<? super Path, ? super T> handler);
+    <T> Parser withPath(String path, TypeRef<T> type, BiConsumer<? super Path, ? super T> handler);
+    <T> Parser withPath(String path, Class<T> type, Consumer<? super T> handler);
+    <T> Parser withPath(String path, TypeRef<T> type, Consumer<? super T> handler);
 
     Parser nestedSubTrees(boolean enable);
 

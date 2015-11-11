@@ -59,9 +59,10 @@ public class BatteryTests {
     @Test
     public void batteryOfTests() throws Exception {
         parsers.parser()
-                .when("$.metadata", new TypeRef<Map<String, Object>>(){}, value -> System.out.printf("Got map %s\n", value))
-                .when("$.*[1:2].someAttr", TestBean.class, value -> System.out.printf("Got one %s %d\n", value.getValue1(), value.getValue2()))
-                .when("$..puff", String.class, value -> System.out.printf("Puff %s\n", value))
+                .withPath("$.metadata", new TypeRef<Map<String, Object>>() {
+                }, value -> System.out.printf("Got map %s\n", value))
+                .withPath("$.*[1:2].someAttr", TestBean.class, value -> System.out.printf("Got one %s %d\n", value.getValue1(), value.getValue2()))
+                .withPath("$..puff", String.class, value -> System.out.printf("Puff %s\n", value))
                 .nestedSubTrees(true)
                 .parse(open());
 

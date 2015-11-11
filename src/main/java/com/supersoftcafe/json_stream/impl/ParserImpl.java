@@ -30,20 +30,20 @@ public final class ParserImpl implements Parser {
 
 
 
-    public @Override <T> ParserImpl when(String path, Class<T> clazz, BiConsumer<? super Path, ? super T> handler) {
-        return when(MatchRule.valueOf(path), TypeCache.constructType(clazz), handler);
+    public @Override <T> ParserImpl withPath(String path, Class<T> clazz, BiConsumer<? super Path, ? super T> handler) {
+        return withPath(MatchRule.valueOf(path), TypeCache.constructType(clazz), handler);
     }
 
-    public @Override <T> ParserImpl when(String path, TypeRef<T> type, BiConsumer<? super Path, ? super T> handler) {
-        return when(MatchRule.valueOf(path), TypeCache.constructType(type), handler);
+    public @Override <T> ParserImpl withPath(String path, TypeRef<T> type, BiConsumer<? super Path, ? super T> handler) {
+        return withPath(MatchRule.valueOf(path), TypeCache.constructType(type), handler);
     }
 
-    public @Override <T> ParserImpl when(String path, Class<T> clazz, Consumer<? super T> handler) {
-        return when(MatchRule.valueOf(path), TypeCache.constructType(clazz), (Path x, T y) -> handler.accept(y));
+    public @Override <T> ParserImpl withPath(String path, Class<T> clazz, Consumer<? super T> handler) {
+        return withPath(MatchRule.valueOf(path), TypeCache.constructType(clazz), (Path x, T y) -> handler.accept(y));
     }
 
-    public @Override <T> ParserImpl when(String path, TypeRef<T> type, Consumer<? super T> handler) {
-        return when(MatchRule.valueOf(path), TypeCache.constructType(type), (Path x, T y) -> handler.accept(y));
+    public @Override <T> ParserImpl withPath(String path, TypeRef<T> type, Consumer<? super T> handler) {
+        return withPath(MatchRule.valueOf(path), TypeCache.constructType(type), (Path x, T y) -> handler.accept(y));
     }
 
 
@@ -72,7 +72,7 @@ public final class ParserImpl implements Parser {
         }
     }
 
-    private <T> ParserImpl when(MatchRule matcher, JavaType type, BiConsumer<? super Path, ? super T> handler) {
+    private <T> ParserImpl withPath(MatchRule matcher, JavaType type, BiConsumer<? super Path, ? super T> handler) {
         elementMatchers.add(new ElementMatcher<>(objectReader, matcher, type, handler));
         return this;
     }
