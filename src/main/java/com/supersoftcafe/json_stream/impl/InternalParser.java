@@ -112,7 +112,9 @@ public final class InternalParser {
                     jsonNode = matcher.readTree(jsonParser());
                 }
 
-                matcher.callWithData(path, jsonNode);
+                if (!jsonNode.isNull()) {
+                    matcher.callWithData(path, jsonNode);
+                }
             }
         }
 
@@ -122,6 +124,6 @@ public final class InternalParser {
             pushParser(nestedParser);
         }
 
-        return jsonNode != null;
+        return jsonNode != null && !jsonNode.isNull();
     }
 }

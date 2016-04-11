@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.Map;
+import java.util.Optional;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
@@ -42,6 +43,20 @@ public class BatteryTests {
     }
 
     @Test
+    public void testFindFirstNull() throws Exception {
+        // Given
+        String json = "{\"field2\": null}";
+        StringReader in = new StringReader(json);
+
+        // When
+        Optional<Boolean> value = parsers.getFirst(in, Boolean.class, "$.field2");
+
+        // Then
+        assertNotNull(value);
+        assertFalse(value.isPresent());
+    }
+
+    @Test
     public void batteryOfTests() throws Exception {
         parsers.parser()
                 .when("$.metadata", new TypeRef<Map<String, Object>>(){}, value -> System.out.printf("Got map %s\n", value))
@@ -50,8 +65,7 @@ public class BatteryTests {
                 .nestedSubTrees(true)
                 .parse(open());
 
-        Map<String, Object> metadata = parsers.getOne(open(), new TypeRef<Map<String, Object>>() {
-        }, "$.metadata");
+        Map<String, Object> metadata = parsers.getOne(open(), new TypeRef<Map<String, Object>>() {}, "$.metadata");
         System.out.printf("Metadata %s\n", metadata);
 
         parsers.stream(open(), TestBean.class, "$.*[1,3,7].someAttr")

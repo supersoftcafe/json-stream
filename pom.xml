@@ -5,7 +5,7 @@
   <groupId>com.supersoftcafe.json-stream</groupId>
   <artifactId>json-stream</artifactId>
   <packaging>jar</packaging>
-  <version>0.1</version>
+  <version>0.2</version>
 
   <name>JSON Stream</name>
   <url>https://github.com/supersoftcafe/json-stream</url>

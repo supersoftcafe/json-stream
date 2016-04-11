@@ -14,7 +14,7 @@ import java.util.function.BiConsumer;
 
 public final class InternalIterator<T> implements Iterator<T> {
     private InternalParser internalParser;
-    private ArrayDeque<T> elements;
+    private Queue<T> elements;
     private boolean nextFound;
 
 
@@ -58,7 +58,7 @@ public final class InternalIterator<T> implements Iterator<T> {
     private void setup(ObjectReader objectReader, Closeable underlyingStream,
                        JsonParser jsonParser, JavaType type, String[] jsonPaths) {
         List<ElementMatcher<?>> matchers = new ArrayList<>();
-        BiConsumer<PathImpl, T> consumer = (path, value) -> elements.addFirst(value);
+        BiConsumer<PathImpl, T> consumer = (path, value) -> elements.add(value);
         for (String jsonPath : jsonPaths)
             matchers.add(new ElementMatcher<>(objectReader, MatchRule.valueOf(jsonPath), type, consumer));
 
@@ -80,7 +80,7 @@ public final class InternalIterator<T> implements Iterator<T> {
     public @Override T next() {
         if (hasNext()) {
             nextFound = false;
-            return elements.removeLast();
+            return elements.remove();
         } else {
             throw new NoSuchElementException();
         }
