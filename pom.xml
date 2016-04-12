@@ -2,12 +2,13 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.supersoftcafe.json-stream</groupId>
-  <artifactId>json-stream</artifactId>
+  <groupId>com.supersoftcafe.json</groupId>
+  <artifactId>json-stream-core</artifactId>
   <packaging>jar</packaging>
   <version>0.2</version>
 
   <name>JSON Stream</name>
+  <description>A library for streaming through JSON and having events fired based on JsonPath matches. The key here is that it doesn't realise the whole object in heap so allowing you to process very large documents quickly and easily.</description>
   <url>https://github.com/supersoftcafe/json-stream</url>
 
   <properties>
@@ -21,9 +22,24 @@
     </license>
   </licenses>
 
+  <developers>
+    <developer>
+      <id>supersoftcafe</id>
+      <name>Michael Brown</name>
+      <url>http://supersoftcafe.com</url>
+    </developer>
+  </developers>
+
   <scm>
     <url>git@github.com:supersoftcafe/json-stream.git</url>
   </scm>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <dependencies>
     <dependency>
@@ -54,6 +70,33 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.3</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.5</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
